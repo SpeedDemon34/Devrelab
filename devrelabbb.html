@@ -1,0 +1,2124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Tarayıcıda çalışan Arduino, ESP32 ve micro:bit devre simülatörü.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}</style>
+</head>
+<body>
+<title>Devrelab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: macOS-style window — floating sidebar (parts), center canvas, right column (code / inspector + serial). Apple HIG system colors & SF type. */
+:root{
+  --bg:#ECECF0;--surface:#FFFFFF;--surface2:#F5F5F7;--glass:rgba(255,255,255,.72);
+  --label:#1D1D1F;--label2:rgba(60,60,67,.62);--label3:rgba(60,60,67,.32);
+  --sep:rgba(60,60,67,.14);--fill:rgba(120,120,128,.12);--fill2:rgba(120,120,128,.2);
+  --blue:#007AFF;--green:#34C759;--red:#FF3B30;--orange:#FF9500;--yellow:#FFCC00;--teal:#30B0C7;--indigo:#5856D6;--purple:#AF52DE;--pink:#FF2D55;
+  --grid:rgba(60,60,67,.16);--canvas:#FAFAFC;--gnd:#3A3A3C;--pinRing:#1D1D1F;--pinGlow:rgba(255,255,255,.95);
+  --shadow:0 0 0 .5px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141416;--surface:#232326;--surface2:#2C2C2E;--glass:rgba(40,40,44,.72);
+  --label:#F5F5F7;--label2:rgba(235,235,245,.62);--label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.55);--fill:rgba(120,120,128,.24);--fill2:rgba(120,120,128,.34);
+  --blue:#0A84FF;--green:#30D158;--red:#FF453A;--orange:#FF9F0A;--yellow:#FFD60A;--teal:#40C8E0;--indigo:#5E5CE6;--purple:#BF5AF2;--pink:#FF375F;
+  --grid:rgba(235,235,245,.1);--canvas:#1B1B1E;--gnd:#8E8E93;--pinRing:#FFFFFF;--pinGlow:rgba(0,0,0,.9);
+  --shadow:0 0 0 .5px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --gnd:#8E8E93;--pinRing:#FFFFFF;--pinGlow:rgba(0,0,0,.9);
+  --bg:#141416;--surface:#232326;--surface2:#2C2C2E;--glass:rgba(40,40,44,.72);
+  --label:#F5F5F7;--label2:rgba(235,235,245,.62);--label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.55);--fill:rgba(120,120,128,.24);--fill2:rgba(120,120,128,.34);
+  --blue:#0A84FF;--green:#30D158;--red:#FF453A;--orange:#FF9F0A;--yellow:#FFD60A;--teal:#40C8E0;--indigo:#5E5CE6;--purple:#BF5AF2;--pink:#FF375F;
+  --grid:rgba(235,235,245,.1);--canvas:#1B1B1E;--gnd:#8E8E93;
+  --shadow:0 0 0 .5px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--label);font:13px/1.4 var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;gap:12px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+.card{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);min-width:0;min-height:0}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;letter-spacing:-.01em;margin-right:6px}
+.brand svg{width:22px;height:22px}
+.spacer{flex:1}
+select,input,button,textarea{font:inherit;color:inherit}
+.popup select,.btn{appearance:none;height:30px;border:0;border-radius:15px;padding:0 14px;background:var(--glass);box-shadow:var(--shadow);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;white-space:nowrap}
+.popup select{padding-right:28px;background-image:linear-gradient(45deg,transparent 50%,var(--label2) 50%),linear-gradient(135deg,var(--label2) 50%,transparent 50%);background-position:calc(100% - 15px) 13px,calc(100% - 11px) 13px;background-size:4px 4px;background-repeat:no-repeat}
+.btn:hover,.popup select:hover{background-color:var(--surface)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.primary.stop{background:var(--red)}
+.btn.small{height:26px;padding:0 12px;font-size:12px}
+.btn svg{width:12px;height:12px;fill:currentColor}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:1px}
+.status{display:flex;align-items:center;gap:8px;color:var(--label2);font-size:12px;padding:0 6px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--label3)}
+.status.on i{background:var(--green);box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 25%,transparent)}
+.status.err i{background:var(--red)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--label)}
+.sub{color:var(--label2);font-size:12px}
+.main{display:grid;grid-template-columns:272px minmax(0,1fr) minmax(320px,420px);gap:12px;min-height:0}
+.sidebar{display:flex;flex-direction:column;overflow:hidden;background:var(--glass);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
+.search{padding:12px 12px 6px}
+.search input{width:100%;box-sizing:border-box;height:28px;border:0;border-radius:8px;background:var(--fill);padding:0 10px}
+#partList{overflow:auto;padding:0 8px 8px;flex:1}
+.group h3{font-size:11px;font-weight:600;color:var(--label2);margin:12px 8px 4px}
+.item{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;border-radius:8px;padding:6px 8px;cursor:pointer;text-align:left}
+.item:hover{background:var(--fill)}
+.item .ic{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex:none}
+.item small{display:block;color:var(--label2);font-size:11px}
+.hint{color:var(--label3);font-size:11px;margin:0;padding:8px 16px 12px}
+.stagewrap{display:flex;flex-direction:column;overflow:hidden}
+.stagebar,.panelhead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:.5px solid var(--sep);min-height:30px}
+.stagebar strong,.panelhead strong{font-weight:600}
+.seg{display:inline-flex;background:var(--fill);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;border-radius:6px;padding:3px 12px;font-size:12px;font-weight:500;cursor:pointer;color:var(--label2)}
+.seg button.on{background:var(--surface);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.stage{flex:1;overflow:hidden;cursor:default;background-color:var(--canvas);background-image:radial-gradient(var(--grid) 1px,transparent 1px);background-size:20px 20px;position:relative;touch-action:none}
+.world{position:absolute;left:0;top:0;width:1px;height:1px;transform-origin:0 0}
+#wires{position:absolute;left:0;top:0;width:1px;height:1px;pointer-events:none;overflow:visible}
+#wires{z-index:3}#wires path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#wires .w{stroke-width:3.2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.28))}
+#wires .wh{stroke:transparent;stroke-width:12;pointer-events:stroke;cursor:pointer}
+#wires .wsel{stroke:var(--blue);stroke-width:9;opacity:.35}
+#wires #wprev{stroke-width:3;stroke-dasharray:6 5;opacity:.9}
+#wires .pin{fill:transparent;stroke:transparent;stroke-width:1.5;pointer-events:all;cursor:crosshair}
+#wires .pin:hover{fill:color-mix(in srgb,var(--blue) 35%,transparent);stroke:var(--blue)}
+#wires.drawing .pin{fill:color-mix(in srgb,var(--blue) 14%,transparent)}
+#wires .jn{stroke:var(--pinRing);stroke-width:1.6;filter:drop-shadow(0 0 1.2px var(--pinGlow)) drop-shadow(0 0 1.2px var(--pinGlow));pointer-events:none}
+#wires .pin:hover{stroke-width:2}
+.cp{position:relative}.cp svg{display:block;overflow:visible}.cp.vib{animation:vib .07s linear infinite}
+@keyframes vib{0%{transform:translate(-.6px,.3px)}50%{transform:translate(.6px,-.3px)}100%{transform:translate(-.6px,.3px)}}
+#wires .bend{fill:var(--surface);stroke:var(--blue);stroke-width:2;pointer-events:all;cursor:move}
+.stage.panning{cursor:grabbing}.stage.placing{cursor:copy}
+.wp.ghost{opacity:.7;pointer-events:none;z-index:6}
+#tip{position:absolute;z-index:9;transform:translate(-50%,-100%);pointer-events:none;font:500 11px/1.2 var(--font);padding:4px 8px;border-radius:7px;background:var(--label);color:var(--bg);white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 4px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 6px;border:0;border-radius:12px;background:var(--surface);box-shadow:0 0 0 .5px var(--sep);cursor:grab;touch-action:none;min-width:0}
+.tile:hover{box-shadow:0 0 0 1.5px var(--blue)}
+.tile .pv{width:64px;height:52px;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+.tile .pv{position:relative}.tile .pv>*{position:absolute;left:50%;top:50%;display:inline-block;transform:translate(-50%,-50%);transform-origin:center;line-height:0}
+.tile .tn{font-size:11px;line-height:1.2;color:var(--label);text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin:6px 4px 14px}
+.sw{width:26px;height:26px;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.sw.on{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--blue)}
+#tab-blocks{position:relative}#blocklyDiv{position:absolute;inset:0}
+#blkNote{position:absolute;left:12px;right:12px;bottom:12px;z-index:5;margin:0;padding:8px 12px;border-radius:10px;font-size:12px;background:color-mix(in srgb,var(--orange) 18%,var(--surface));box-shadow:var(--shadow)}
+.blocklyToolboxDiv{font-family:var(--font)}.blocklyTreeRow{border-radius:8px;margin:2px 6px!important}
+.part{position:absolute;background:var(--surface);border-radius:14px;box-shadow:var(--shadow);user-select:none;-webkit-user-select:none}
+.part.sel{box-shadow:0 0 0 2px var(--blue),var(--shadow)}
+.part header{display:flex;align-items:center;gap:6px;padding:8px 12px 6px;font-size:12px;font-weight:600;cursor:grab;touch-action:none}
+.part header span{color:var(--label2);font-weight:400}
+.part .body{padding:4px 12px 12px 18px;display:flex;gap:12px;align-items:center}
+.pins{display:flex;flex-direction:column;gap:6px}
+.pinrow{display:flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--label2);white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--surface);border:2px solid var(--label3);box-sizing:border-box;margin-left:-23px;margin-right:4px}
+.dot.on{border-color:var(--green);background:var(--green)}
+.viz{display:flex;flex-direction:column;align-items:center;gap:8px}
+.viz input[type=range]{width:130px;accent-color:var(--blue)}
+.viz label{font-size:11px;color:var(--label2);display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+.board .pcb{border-radius:10px;padding:14px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;width:150px;box-sizing:border-box;position:relative}
+.pcb .chipart{width:56px;height:56px;border-radius:6px;background:#1c1c1e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);align-self:center;display:grid;place-items:center;font:9px var(--mono);color:rgba(255,255,255,.6)}
+.pcb .pled{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18)}
+.pcb .pled.on{background:#FFD60A;box-shadow:0 0 8px #FFD60A}
+.bpins{display:flex;flex-direction:column;gap:3px;padding-right:6px}
+.bpin{display:flex;align-items:center;justify-content:flex-end;gap:6px;font:10px var(--mono);color:var(--label2);height:12px}
+.bpin .dot{margin:0 -17px 0 0;width:8px;height:8px}
+.right{display:grid;grid-template-rows:minmax(0,1fr) 210px;gap:12px;min-height:0;min-width:0}
+.panel{display:flex;flex-direction:column;overflow:hidden}
+.tab{flex:1;min-height:0;display:flex;flex-direction:column}
+.editor{flex:1;display:flex;min-height:0;overflow:hidden}
+.gutter{margin:0;padding:12px 8px 12px 12px;color:var(--label3);font:12px/1.6 var(--mono);text-align:right;user-select:none;overflow:hidden;min-width:28px}
+#code{flex:1;border:0;resize:none;outline:none;background:none;padding:12px 12px 12px 4px;font:12px/1.6 var(--mono);white-space:pre;overflow:auto;tab-size:2}
+#insp{padding:16px;overflow:auto}
+.form{display:flex;flex-direction:column;gap:0;background:var(--surface2);border-radius:10px;overflow:hidden;margin:6px 0 16px}
+.form .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;min-height:28px}
+.form .row+.row{border-top:.5px solid var(--sep)}
+.form select,.form input{border:0;background:var(--fill);border-radius:6px;padding:4px 8px;max-width:60%}
+.sect{font-size:11px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.04em;margin:4px 4px 0}
+.btn.danger{color:var(--red)}
+.empty{color:var(--label2);text-align:center;padding:40px 16px}
+.term{display:flex;flex-direction:column;overflow:hidden}
+.serial{flex:1;margin:0;padding:10px 14px;overflow:auto;font:12px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word}
+.serial .e{color:var(--red)}.serial .s{color:var(--label2)}
+.serialin{display:flex;gap:8px;padding:8px 10px;border-top:.5px solid var(--sep)}
+.serialin input{flex:1;min-width:0;border:0;background:var(--fill);border-radius:8px;padding:0 10px;height:26px}
+.link{border:0;background:none;color:var(--blue);cursor:pointer;font-size:12px}
+[hidden]{display:none!important}
+.pet{position:fixed;left:0;top:0;width:60px;height:42px;image-rendering:pixelated;z-index:60;cursor:pointer;transform-origin:center;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.petbub{position:fixed;left:0;top:0;z-index:61;padding:4px 9px;border-radius:10px;background:var(--surface);color:var(--label);box-shadow:var(--shadow);font:600 12px var(--font);pointer-events:none;white-space:nowrap}
+:root{--tk:#AD3DA4;--ts:#C41A16;--tn:#1C00CF;--tc:#8A99A6;--tp:#643820;--tf:#326D74;--tt:#3900A0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--tk:#FF7AB2;--ts:#FF8170;--tn:#D9C97C;--tc:#7F8C98;--tp:#FD8F3F;--tf:#67B7A4;--tt:#DABAFF}}
+:root[data-theme="dark"]{--tk:#FF7AB2;--ts:#FF8170;--tn:#D9C97C;--tc:#7F8C98;--tp:#FD8F3F;--tf:#67B7A4;--tt:#DABAFF}
+.codewrap{position:relative;flex:1;min-width:0}
+#hl,.codewrap #code{position:absolute;inset:0;margin:0;padding:12px 12px 12px 4px;font:12px/1.6 var(--mono);white-space:pre;tab-size:2;box-sizing:border-box;border:0}
+#hl{pointer-events:none;overflow:hidden;color:var(--label)}#hl i{font-style:normal}
+.codewrap #code{overflow:auto;color:transparent;caret-color:var(--label);background:none;resize:none;outline:none}
+.codewrap #code::selection{background:color-mix(in srgb,var(--blue) 28%,transparent)}
+.tk{color:var(--tk);font-weight:600}.ts{color:var(--ts)}.tn{color:var(--tn)}.tc{color:var(--tc)}.tp{color:var(--tp)}.tf{color:var(--tf)}.tt{color:var(--tt)}
+#ac{position:absolute;z-index:6;min-width:160px;max-width:260px;padding:4px;border-radius:10px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column}
+#ac button{border:0;background:none;text-align:left;padding:4px 8px;border-radius:6px;font:12px var(--mono);cursor:pointer}#ac button.on{background:var(--blue);color:#fff}
+.gutter .errl{color:#fff;background:var(--red);border-radius:4px;padding:0 3px;font-weight:400}
+.band{position:absolute;z-index:8;border:1px solid var(--blue);background:color-mix(in srgb,var(--blue) 12%,transparent);border-radius:3px;pointer-events:none}
+#wires .wend{fill:var(--surface);stroke:var(--blue);stroke-width:2.2;pointer-events:all;cursor:grab}
+#plot{flex:1;width:100%;min-height:0;display:block}
+.iconbtn:disabled{opacity:.35;cursor:default}
+body.nocode .main{grid-template-columns:272px minmax(0,1fr)}body.nocode .right{display:none}
+#codeToggle[aria-pressed="true"]{color:var(--blue)}
+.iconbtn{width:26px;height:26px;border:0;border-radius:7px;background:none;color:var(--label2);cursor:pointer;display:grid;place-items:center}.iconbtn:hover{background:var(--fill)}.iconbtn svg{width:12px;height:12px}
+.mbm{display:grid;grid-template-columns:repeat(5,16px);gap:6px;justify-content:center;padding:18px 0 10px}
+.mbm i{width:7px;height:11px;margin:auto;border-radius:2px;background:#3A2626}.mbm i.on{background:#FF453A;box-shadow:0 0 9px #FF453A}
+.mbb{display:flex;justify-content:space-between;align-items:center;font:600 10px var(--font);color:#fff}
+.mbb button{width:32px;height:32px;border-radius:50%;border:3px solid #48484A;background:#2C2C2E;color:#fff;font-weight:700;cursor:pointer;touch-action:none}.mbb button.on{background:#636366}
+@media (max-width:900px){body.nocode .main{grid-template-columns:1fr}}
+.wp{position:absolute;line-height:0;transform-origin:center;touch-action:none}
+.wp>:not(.plab){display:block}
+.wp.sel{outline:2px solid var(--blue);outline-offset:6px;border-radius:4px}
+.wp.drag{cursor:grabbing}
+.plab{position:absolute;bottom:100%;left:0;margin-bottom:6px;font:500 11px/1.3 var(--font);color:var(--label);white-space:nowrap;cursor:grab;padding:3px 8px;border-radius:7px;background:var(--glass);box-shadow:var(--shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.plab em{font-style:normal;color:var(--label2)}.plab b{color:var(--green);font-weight:600}
+#pop{position:absolute;z-index:5;width:240px;padding:12px 14px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;line-height:1.3}
+#pop label{display:flex;justify-content:space-between;font-size:12px;color:var(--label2)}#pop label b{color:var(--label);font-variant-numeric:tabular-nums;font-weight:500}
+#pop input[type=range]{width:100%;accent-color:var(--blue);margin:0 0 4px}
+#pop .files details{border-top:.5px solid var(--sep);padding:6px 0}#pop summary{cursor:pointer;font:12px var(--mono)}#pop summary em{font-style:normal;color:var(--label2);margin-left:8px}
+#pop pre{margin:6px 0 0;max-height:140px;overflow:auto;font:11px/1.4 var(--mono);background:var(--surface2);padding:8px;border-radius:8px;white-space:pre-wrap}
+.tog{flex-direction:row!important;justify-content:flex-start!important;align-items:center;gap:10px;cursor:pointer;color:var(--label)!important}
+.tog input{position:absolute;opacity:0}.tog span{width:38px;height:22px;border-radius:11px;background:var(--fill2);position:relative;transition:background .2s;flex:none}
+.tog span::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.tog input:checked+span{background:var(--green)}.tog input:checked+span::after{transform:translateX(16px)}
+.tog input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent)}
+.plab b.err{color:var(--red)}
+.btterm{margin:0;max-height:150px;min-height:70px;overflow:auto;font:11px/1.45 var(--mono);background:var(--surface2);padding:8px;border-radius:8px;white-space:pre-wrap;word-break:break-word}
+.termin{display:flex;gap:6px}.termin input{flex:1;min-width:0;border:0;background:var(--fill);border-radius:8px;padding:0 8px;height:26px}
+.cards{display:flex;flex-direction:column;gap:6px}.cardbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;border:0;border-radius:10px;padding:8px 10px;background:var(--surface2);cursor:pointer;font-size:12px}
+.cardbtn.on{box-shadow:0 0 0 2px var(--blue)}.cardbtn span{color:var(--label2);font-size:10px}
+.cp .drops{opacity:0}.cp.flow .drops{opacity:1;animation:drop .5s linear infinite}@keyframes drop{to{transform:translateY(-8px)}}
+.group h3 span{font-weight:400;color:var(--label3)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:1180px){.stagehint{display:none}}
+@media (max-width:900px){
+  #partList .tiles{display:flex}#partList .tile{flex:none;width:84px}
+  body{overflow:auto}
+  .app{height:auto}
+  .main{grid-template-columns:1fr}
+  .sidebar{max-height:none}
+  #partList{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px}
+  .group{display:contents}.group h3{display:none}
+  .item{flex:none;width:auto;background:var(--fill)}
+  .hint{display:none}
+  .stagewrap{height:62vh}
+  .right{grid-template-rows:60vh 260px}
+  .toolbar .btn:not(.primary):not(#codeToggle){display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+<header class="toolbar">
+  <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="var(--blue)"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" stroke="var(--label2)" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.4" fill="#fff"/></svg>Devrelab</div>
+  <label class="popup"><span class="sr">Kart</span><select id="boardSel"></select></label>
+  <label class="popup"><span class="sr">Örnek projeler</span><select id="exSel"><option value="">Örnekler</option></select></label>
+  <div class="spacer"></div>
+  <div class="status" id="status"><i></i><span id="statusText">Hazır</span><span id="clock" class="mono">0.0 sn</span></div>
+  <span class="chip" id="wifiChip" hidden></span>
+  <button class="btn" id="exportBtn">Projeyi kopyala</button>
+  <label class="btn" for="importFile">İçe aktar</label><input type="file" id="importFile" accept=".json,application/json" hidden>
+  <button class="btn" id="codeToggle" aria-pressed="true"><svg viewBox="0 0 12 12"><path d="M4 2L1 6l3 4M8 2l3 4-3 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Kod</span></button>
+  <button class="btn primary" id="runBtn"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg><span>Çalıştır</span></button>
+</header>
+<main class="main">
+  <aside class="sidebar card">
+    <div class="search"><input id="partSearch" placeholder="Parça ara" aria-label="Parça ara"></div>
+    <div id="partList"></div>
+    <p class="hint">Parçayı tuvale sürükle ya da tıklayıp yerleştir. Esc iptal eder. Çizimler: wokwi-elements (MIT) · Bloklar: Blockly.</p>
+  </aside>
+  <section class="stagewrap card">
+    <div class="stagebar"><strong>Devre</strong><span class="sub" id="partCount"></span><div class="spacer"></div>
+      <span class="sub stagehint">Pine tıkla, kablo başlar · tekerlek: yakınlaştır · boş alanı sürükle: kaydır</span><button class="iconbtn" id="undoBtn" aria-label="Geri al" title="Geri al (Ctrl+Z)" disabled><svg viewBox="0 0 12 12"><path d="M4 2L1.5 4.5 4 7M2 4.5h5a3 3 0 010 6H5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="iconbtn" id="redoBtn" aria-label="Yinele" title="Yinele (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 12 12"><path d="M8 2l2.5 2.5L8 7M10 4.5H5a3 3 0 000 6h2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="btn small" id="fitBtn">Sığdır</button></div>
+    <div class="stage" id="stage"><div class="world" id="world"><svg id="wires" aria-hidden="true"></svg><div id="pop" hidden></div></div><div id="tip" hidden></div></div>
+  </section>
+  <section class="right">
+    <div class="card panel">
+      <div class="panelhead"><div class="seg" id="tabSeg"><button data-t="blocks">Bloklar</button><button data-t="code" class="on">Kod</button><button data-t="insp">Parça</button></div><div class="spacer"></div><span class="sub mono">sketch.ino</span><button class="iconbtn" id="codeClose" aria-label="Kod panelini kapat" title="Kod panelini kapat"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <div class="tab" id="tab-blocks" hidden><div id="blocklyDiv"></div><p id="blkNote" hidden>Kod sekmesinde elle değişiklik var. Bloklarda bir şey değiştirirsen kod bloklardan yeniden oluşturulur.</p></div>
+      <div class="tab" id="tab-code"><div class="editor"><pre class="gutter" id="gutter">1</pre><div class="codewrap"><pre id="hl" aria-hidden="true"></pre><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Arduino kodu"></textarea><div id="ac" hidden></div></div></div></div>
+      <div class="tab" id="tab-insp" hidden><div id="insp"></div></div>
+    </div>
+    <div class="card term">
+      <div class="panelhead"><div class="seg" id="serSeg"><button data-v="mon" class="on">Seri Monitör</button><button data-v="plot">Grafik</button></div><span class="sub mono" id="baud">—</span><div class="spacer"></div><button class="link" id="clearSerial">Temizle</button></div>
+      <pre id="serialOut" class="serial" aria-live="polite"></pre><canvas id="plot" hidden></canvas>
+      <form id="serialForm" class="serialin"><input id="serialIn" placeholder="Karta mesaj gönder" aria-label="Seri giriş"><button class="btn small">Gönder</button></form>
+    </div>
+  </section>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@wokwi/elements@1.9.2/dist/wokwi-elements.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@12.5.1/blockly_compressed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@12.5.1/blocks_compressed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blockly@12.5.1/msg/tr.js"></script>
+<script>
+/* ---------- boards & parts (visuals: @wokwi/elements, MIT) ---------- */
+const $=s=>document.querySelector(s);
+const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+const ESPA=[36,null,null,39,32,33,34,35,null,null,4,0,2,15,13,12,14,27,25,26];
+function mkBoard(o){o.lab=o.lab||(n=>o.pre+n);o.pins=o.pins.map(n=>({n,l:o.lab(n)}));o.analog=new Set(o.A.filter(n=>n!=null));return o}
+const avr=(n,off)=>n<off?'D'+n:'A'+(n-off), avrPn=(n,off)=>n<off?String(n):'A'+(n-off);
+const BOARDS={
+ uno:mkBoard({name:'Arduino Uno R3',tag:'wokwi-arduino-uno',chip:'ATmega328P',adc:1023,volt:'5V',sda:18,scl:19,mosi:11,miso:12,sck:13,led:13,ledProp:'led13',pwm:[3,5,6,9,10,11],avoid:[0,1],
+   vcc:'5V',gnd:'GND.2',pins:range(0,19),lab:n=>avr(n,14),pn:n=>avrPn(n,14),A:range(14,19)}),
+ nano:mkBoard({name:'Arduino Nano',tag:'wokwi-arduino-nano',chip:'ATmega328P',adc:1023,volt:'5V',sda:18,scl:19,mosi:11,miso:12,sck:13,led:13,ledProp:'led13',pwm:[3,5,6,9,10,11],avoid:[0,1],
+   vcc:'5V',gnd:'GND.1',pins:range(0,21),lab:n=>avr(n,14),pn:n=>avrPn(n,14),A:range(14,21)}),
+ mega:mkBoard({name:'Arduino Mega 2560',tag:'wokwi-arduino-mega',chip:'ATmega2560',adc:1023,volt:'5V',sda:20,scl:21,mosi:51,miso:50,sck:52,led:13,ledProp:'led13',pwm:[...range(2,13),44,45,46],avoid:[0,1],
+   vcc:'5V.1',gnd:'GND.1',pins:range(0,69),lab:n=>avr(n,54),pn:n=>avrPn(n,54),A:range(54,69)}),
+ nanorp:mkBoard({name:'Arduino Nano RP2040 Connect',tag:'wokwi-nano-rp2040-connect',chip:'RP2040',adc:1023,volt:'3.3V',wifi:1,bt:1,sda:18,scl:19,mosi:11,miso:12,sck:13,led:13,ledProp:'ledBuiltIn',
+   vcc:'3.3V',gnd:'GND.1',pins:range(2,21),lab:n=>avr(n,14),pn:n=>avr(n,14),A:range(14,21),avoid:[]}),
+ esp32:mkBoard({name:'ESP32 DevKit V1',tag:'wokwi-esp32-devkit-v1',chip:'ESP32',adc:4095,volt:'3.3V',wifi:1,bt:1,sda:21,scl:22,mosi:23,miso:19,sck:18,led:2,ledProp:'led1',
+   avoid:[2,12,15,34,35,36,39],inOnly:[34,35,36,39],vcc:'3V3',gnd:'GND.1',pins:[2,4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33,34,35,36,39],
+   lab:n=>({36:'VP',39:'VN',16:'RX2',17:'TX2'})[n]||'D'+n,A:ESPA}),
+ s3:mkBoard({name:'ESP32-S3 DevKitC',chip:'ESP32-S3',color:'#2B2B2E',pre:'G',adc:4095,volt:'3.3V',wifi:1,bt:1,sda:8,scl:9,mosi:11,miso:13,sck:12,led:48,avoid:[0,45,46,48],vcc:'3V3',gnd:'GND',
+   pins:[...range(1,18),21,...range(38,48)],A:range(1,20)}),
+ pico:mkBoard({name:'Raspberry Pi Pico W',chip:'RP2040',color:'#2F7D46',pre:'GP',adc:1023,volt:'3.3V',wifi:1,sda:4,scl:5,mosi:19,miso:16,sck:18,led:25,avoid:[0,1,25],vcc:'3V3',gnd:'GND',pins:range(0,28),A:[26,27,28]}),
+ franz:mkBoard({name:'Franzininho · ATtiny85',tag:'wokwi-franzininho',chip:'ATtiny85',adc:1023,volt:'5V',sda:0,scl:2,mosi:0,miso:1,sck:2,led:1,ledProp:'led1',pwm:[0,1,4],avoid:[],
+   vcc:'VCC.1',gnd:'GND.1',pins:range(0,5),pre:'PB',lab:n=>'PB'+n,A:[5,2,4,3]}),
+};
+Object.values(BOARDS).forEach(b=>{if(b.tag&&!b.pn)b.pn=b.lab});
+
+const S={board:'uno',parts:[],sel:null,zoom:1.5,pins:{},nextId:1,bx:40,by:60,wDirty:true};
+const BRD=()=>BOARDS[S.board];
+const P=n=>S.pins[n]||(S.pins[n]={mode:'IN',v:0,pwm:0});
+const lvl=n=>n==null?0:(P(n).mode=='OUT'?P(n).pwm:0);
+const pinLabel=n=>(BRD().pins.find(p=>p.n==n)||{l:'—'}).l;
+const pct=1;
+const pushDial=(p,seq)=>seq.forEach(([k,v,t])=>setTimeout(()=>p.st[k]=v,t));
+
+const PARTS={
+ led:{tag:'wokwi-led',name:'LED',g:'Çıkış',d:'digitalWrite · analogWrite',pins:['A'],pwm:['A'],gnd:['C'],props:{color:'red'},
+   up:(p,e)=>{const v=lvl(p.pins.A);e.value=v>0;e.brightness=v}},
+ rgb:{tag:'wokwi-rgb-led',name:'RGB LED',g:'Çıkış',d:'Ortak katot · PWM',pins:['R','G','B'],pwm:['R','G','B'],gnd:['COM'],
+   up:(p,e)=>{e.ledRed=lvl(p.pins.R);e.ledGreen=lvl(p.pins.G);e.ledBlue=lvl(p.pins.B)}},
+ bar:{tag:'wokwi-led-bar-graph',name:'LED Bar',g:'Çıkış',d:'10 segment',pins:range(1,10).map(i=>'A'+i),
+   up:(p,e)=>{e.values=range(1,10).map(i=>lvl(p.pins['A'+i])>.5?1:0)}},
+ buzzer:{tag:'wokwi-buzzer',name:'Buzzer',g:'Çıkış',d:'tone · noTone',pins:['1'],gnd:['2'],
+   up:(p,e)=>{const f=p.st.freq||(lvl(p.pins['1'])>.5?2000:0);e.hasSignal=f>0;Audio_.set(p.id,f)}},
+ servo:{tag:'wokwi-servo',name:'Servo',g:'Çıkış',d:'Servo.h',pins:['PWM'],pwm:['PWM'],st:{angle:90},up:(p,e)=>{e.angle=p.st.angle}},
+ stepper:{tag:'wokwi-stepper-motor',name:'Step Motor',g:'Çıkış',d:'Stepper.h · NEMA 17',pins:['A-','A+','B+','B-'],props:{size:17},st:{angle:0},
+   up:(p,e)=>{e.angle=p.st.angle;e.value=Math.round(p.st.angle)+'';e.units='°'}},
+ motor:{custom:1,name:'DC Motor · L298N',g:'Çıkış',d:'IN1 · IN2 · ENA',pins:['IN1','IN2','ENA'],pwm:['ENA'],st:{rot:0}},
+ relay:{tag:'wokwi-ks2e-m-dc5',name:'Röle',g:'Çıkış',d:'KS2E 5V',pins:['COIL1'],gnd:['COIL2'],up:(p)=>{p.st.badge=lvl(p.pins.COIL1)>.5?'AÇIK':'KAPALI'}},
+ neopixel:{tag:'wokwi-neopixel',name:'NeoPixel LED',g:'Çıkış',d:'WS2812 tek LED',pins:['DIN'],gnd:['VSS'],neo:1,
+   up:(p,e)=>{if(!p.st.dirty)return;const c=(p.st.px||[])[0]||0;e.r=(c>>16&255)/255;e.g=(c>>8&255)/255;e.b=(c&255)/255;p.st.dirty=false}},
+ ring:{tag:'wokwi-led-ring',name:'NeoPixel Halka',g:'Çıkış',d:'WS2812 · Adafruit_NeoPixel',pins:['DIN'],props:{pixels:16},neo:1,
+   up:(p,e)=>{if(!p.st.dirty)return;for(let i=0;i<e.pixels;i++){const c=(p.st.px||[])[i]||0;e.setPixel(i,{r:(c>>16&255)/255,g:(c>>8&255)/255,b:(c&255)/255})}p.st.dirty=false}},
+ matrix:{tag:'wokwi-neopixel-matrix',name:'NeoPixel Matris',g:'Çıkış',d:'8×8 WS2812',pins:['DIN'],props:{rows:8,cols:8},neo:1,
+   up:(p,e)=>{if(!p.st.dirty)return;const n=e.rows*e.cols;for(let i=0;i<n;i++){const c=(p.st.px||[])[i]||0;e.setPixel(Math.floor(i/e.cols),i%e.cols,{r:(c>>16&255)/255,g:(c>>8&255)/255,b:(c&255)/255})}p.st.dirty=false}},
+ seg7:{tag:'wokwi-7segment',name:'7 Segment',g:'Ekranlar',d:'Ortak katot · tek hane',pins:['A','B','C','D','E','F','G','DP'],gnd:['COM.1'],
+   up:(p,e)=>{e.values=['A','B','C','D','E','F','G','DP'].map(k=>lvl(p.pins[k])>.5?1:0)}},
+ lcd:{tag:'wokwi-lcd1602',name:'LCD 16×2 I²C',g:'Ekranlar',d:'LiquidCrystal_I2C',props:{pins:'i2c'},fix:{SDA:'sda',SCL:'scl'},cols:16,rows:2,up:(p,e)=>lcdUp(p,e,16,2)},
+ lcd4:{tag:'wokwi-lcd2004',name:'LCD 20×4 I²C',g:'Ekranlar',d:'LiquidCrystal_I2C',props:{pins:'i2c'},fix:{SDA:'sda',SCL:'scl'},cols:20,rows:4,up:(p,e)=>lcdUp(p,e,20,4)},
+ oled:{tag:'wokwi-ssd1306',name:'OLED 128×64',g:'Ekranlar',d:'Adafruit_SSD1306 · I²C',fix:{DATA:'sda',CLK:'scl'},
+   up:(p,e)=>{if(!p.st.dirty||!p.st.view)return;e.imageData=p.st.view.getContext('2d').getImageData(0,0,128,64);e.redraw&&e.redraw();p.st.dirty=false}},
+ tft:{tag:'wokwi-ili9341',name:'TFT ILI9341',g:'Ekranlar',d:'TFT_eSPI · Adafruit_ILI9341',pins:['CS','D/C'],fix:{MOSI:'mosi',SCK:'sck',MISO:'miso'},up:tftUp},
+ button:{tag:'wokwi-pushbutton',name:'Buton',g:'Giriş',d:'digitalRead',pins:['1.l'],gnd:['2.l'],props:{color:'green'},ia:1,st:{pressed:false},
+   ev:(p,e)=>{e.addEventListener('button-press',()=>p.st.pressed=true);e.addEventListener('button-release',()=>p.st.pressed=false)},
+   dval:(p,k,pu)=>p.st.pressed?(pu?0:1):(pu?1:0)},
+ button6:{tag:'wokwi-pushbutton-6mm',name:'Mini Buton 6 mm',g:'Giriş',d:'digitalRead',pins:['1.l'],gnd:['2.l'],props:{color:'blue'},ia:1,st:{pressed:false}},
+ pot:{tag:'wokwi-potentiometer',name:'Potansiyometre',g:'Giriş',d:'analogRead',pins:['SIG'],a:['SIG'],ia:1,props:{min:0,max:1000},st:{v:.5},
+   ev:(p,e)=>{e.value=p.st.v*1000;e.addEventListener('input',()=>p.st.v=e.value/1000)},aval:p=>p.st.v},
+ slidepot:{tag:'wokwi-slide-potentiometer',name:'Sürgülü Pot',g:'Giriş',d:'analogRead',pins:['SIG'],a:['SIG'],ia:1,props:{min:0,max:1000,travelLength:30},st:{v:.5}},
+ joystick:{tag:'wokwi-analog-joystick',name:'Joystick',g:'Giriş',d:'VERT · HORZ · SEL',pins:['VERT','HORZ','SEL'],a:['VERT','HORZ'],ia:1,st:{x:0,y:0,pressed:false},
+   ev:(p,e)=>{e.addEventListener('input',()=>{p.st.x=e.xValue;p.st.y=e.yValue});e.addEventListener('button-press',()=>p.st.pressed=true);e.addEventListener('button-release',()=>p.st.pressed=false)},
+   aval:(p,k)=>k=='VERT'?(p.st.y+1)/2:(p.st.x+1)/2,dval:p=>p.st.pressed?0:1},
+ slideswitch:{tag:'wokwi-slide-switch',name:'Sürgülü Anahtar',g:'Giriş',d:'digitalRead',pins:['2'],ia:1,st:{v:0},
+   ev:(p,e)=>{e.value=p.st.v;e.addEventListener('input',()=>p.st.v=e.value)},dval:p=>p.st.v?1:0},
+ dip:{tag:'wokwi-dip-switch-8',name:'DIP Anahtar 8’li',g:'Giriş',d:'8 anahtar',pins:range(1,8).map(i=>i+'a'),ia:1,st:{vals:[0,0,0,0,0,0,0,0]},
+   ev:(p,e)=>{e.values=[...p.st.vals];e.addEventListener('switch-change',()=>setTimeout(()=>p.st.vals=[...e.values]))},
+   dval:(p,k,pu)=>{const on=p.st.vals[parseInt(k)-1];return on?(pu?0:1):(pu?1:0)}},
+ keypad:{tag:'wokwi-membrane-keypad',name:'Tuş Takımı 4×4',g:'Giriş',d:'Keypad.h',pins:['R1','R2','R3','R4','C1','C2','C3','C4'],ia:1,st:{q:[]},
+   ev:(p,e)=>e.addEventListener('button-press',ev=>p.st.q.push(ev.detail))},
+ encoder:{tag:'wokwi-ky-040',name:'Döner Enkoder',g:'Giriş',d:'KY-040',pins:['CLK','DT','SW'],ia:1,st:{CLK:1,DT:1,SW:1},
+   ev:(p,e)=>{e.addEventListener('rotate-cw',()=>pushDial(p,[['CLK',0,0],['DT',0,3],['CLK',1,6],['DT',1,9]]));
+     e.addEventListener('rotate-ccw',()=>pushDial(p,[['DT',0,0],['CLK',0,3],['DT',1,6],['CLK',1,9]]));
+     e.addEventListener('button-press',()=>p.st.SW=0);e.addEventListener('button-release',()=>p.st.SW=1)},dval:(p,k)=>p.st[k]},
+ dialer:{tag:'wokwi-rotary-dialer',name:'Döner Telefon Kadranı',g:'Giriş',d:'DIAL · PULSE',pins:['DIAL','PULSE'],ia:1,st:{DIAL:1,PULSE:0},
+   ev:(p,e)=>{e.addEventListener('dial-start',()=>p.st.DIAL=0);e.addEventListener('dial',ev=>{const n=ev.detail.digit||10;
+     pushDial(p,[...range(0,n-1).flatMap(i=>[['PULSE',1,i*100],['PULSE',0,i*100+50]]),['DIAL',1,n*100+50]])})},dval:(p,k)=>p.st[k]},
+ irremote:{tag:'wokwi-ir-remote',name:'IR Kumanda',g:'Giriş',d:'NEC kodları',pins:[],ia:1,
+   ev:(p,e)=>e.addEventListener('button-press',ev=>S.parts.filter(r=>r.type=='irrecv').forEach(r=>r.st.q.push(ev.detail.irCode)))},
+ irrecv:{tag:'wokwi-ir-receiver',name:'IR Alıcı',g:'Sensörler',d:'IRremote',pins:['DAT'],st:{q:[]}},
+ pir:{tag:'wokwi-pir-motion-sensor',name:'PIR Hareket',g:'Sensörler',d:'HC-SR501',pins:['OUT'],st:{on:false},ctrl:[{k:'on',l:'Hareket algılandı',t:'tog'}],dval:p=>p.st.on?1:0},
+ tilt:{tag:'wokwi-tilt-switch',name:'Eğim Sensörü',g:'Sensörler',d:'SW-520D',pins:['OUT'],st:{on:false},ctrl:[{k:'on',l:'Eğik',t:'tog'}],dval:p=>p.st.on?1:0},
+ sonar:{tag:'wokwi-hc-sr04',name:'HC-SR04 Mesafe',g:'Sensörler',d:'pulseIn',pins:['TRIG','ECHO'],st:{d:50},ctrl:[{k:'d',l:'Mesafe',min:2,max:400,u:' cm'}]},
+ dht:{tag:'wokwi-dht22',name:'DHT22',g:'Sensörler',d:'Sıcaklık · nem',pins:['SDA'],st:{t:24,h:45},ctrl:[{k:'t',l:'Sıcaklık',min:-40,max:80,step:.5,u:' °C'},{k:'h',l:'Nem',min:0,max:100,u:'%'}]},
+ ldr:{tag:'wokwi-photoresistor-sensor',name:'LDR Işık',g:'Sensörler',d:'AO · DO',pins:['AO','DO'],a:['AO'],st:{lux:500},ctrl:[{k:'lux',l:'Işık',min:1,max:10000,u:' lux'}],
+   aval:p=>{const R=50e3*Math.pow(10,.7)/Math.pow(p.st.lux,.7);return R/(R+10000)},dval:p=>p.st.lux<100?1:0,up:(p,e)=>{e.ledPower=true;e.ledDO=p.st.lux>=100}},
+ ntc:{tag:'wokwi-ntc-temperature-sensor',name:'NTC Sıcaklık',g:'Sensörler',d:'Beta 3950 · 10 kΩ',pins:['OUT'],a:['OUT'],st:{t:24},ctrl:[{k:'t',l:'Sıcaklık',min:-24,max:80,step:.5,u:' °C'}],
+   aval:p=>1/(1+Math.exp(-3950*(1/(p.st.t+273.15)-1/298.15)))},
+ gas:{tag:'wokwi-gas-sensor',name:'Gaz Sensörü MQ-2',g:'Sensörler',d:'AOUT · DOUT',pins:['AOUT','DOUT'],a:['AOUT'],st:{v:.2},ctrl:[{k:'v',l:'Gaz yoğunluğu',pct}],
+   aval:p=>p.st.v,dval:p=>p.st.v>.5?0:1,up:(p,e)=>{e.ledPower=true;e.ledD0=p.st.v>.5}},
+ flame:{tag:'wokwi-flame-sensor',name:'Alev Sensörü',g:'Sensörler',d:'AOUT · DOUT',pins:['AOUT','DOUT'],a:['AOUT'],st:{v:0},ctrl:[{k:'v',l:'Alev şiddeti',pct}],
+   aval:p=>1-p.st.v,dval:p=>p.st.v>.5?0:1,up:(p,e)=>{e.ledPower=true;e.ledSignal=p.st.v>.5}},
+ sound:{tag:'wokwi-small-sound-sensor',name:'Ses Sensörü',g:'Sensörler',d:'AOUT · DOUT',pins:['AOUT','DOUT'],a:['AOUT'],st:{v:.1},ctrl:[{k:'v',l:'Ses seviyesi',pct}],
+   aval:p=>p.st.v*(.85+Math.random()*.15),dval:p=>p.st.v>.5?1:0,up:(p,e)=>{e.ledPower=true;e.ledSignal=p.st.v>.5}},
+ soundbig:{tag:'wokwi-big-sound-sensor',name:'Ses Sensörü · büyük',g:'Sensörler',d:'AOUT · DOUT',pins:['AOUT','DOUT'],a:['AOUT'],st:{v:.1},ctrl:[{k:'v',l:'Ses seviyesi',pct}],
+   aval:p=>p.st.v*(.85+Math.random()*.15),dval:p=>p.st.v>.5?1:0,up:(p,e)=>{e.led1=true;e.led2=p.st.v>.5}},
+ heart:{tag:'wokwi-heart-beat-sensor',name:'Nabız Sensörü',g:'Sensörler',d:'Analog çıkış',pins:['OUT'],a:['OUT'],st:{bpm:72},ctrl:[{k:'bpm',l:'Nabız',min:40,max:180,u:' BPM'}],
+   aval:p=>((performance.now()/60000*p.st.bpm)%1)<.12?.82:.45,dval:p=>((performance.now()/60000*p.st.bpm)%1)<.12?1:0},
+ mpu:{tag:'wokwi-mpu6050',name:'MPU6050',g:'Sensörler',d:'İvme · jiroskop',pins:[],fix:{SDA:'sda',SCL:'scl'},st:{ax:0,ay:0,az:1,gx:0,gy:0,gz:0,t:24},up:(p,e)=>{e.led1=true},
+   ctrl:[...['ax','ay','az'].map(k=>({k,l:'İvme '+k[1].toUpperCase(),min:-2,max:2,step:.01,u:' g'})),...['gx','gy','gz'].map(k=>({k,l:'Dönüş '+k[1].toUpperCase(),min:-250,max:250,u:' °/s'})),{k:'t',l:'Sıcaklık',min:-40,max:85,u:' °C'}]},
+ hx711:{tag:'wokwi-hx711',name:'HX711 Yük Hücresi',g:'Sensörler',d:'HX711.h · 5 kg',pins:['DT','SCK'],props:{type:'5kg'},st:{w:0},ctrl:[{k:'w',l:'Ağırlık',min:0,max:5000,u:' g'}]},
+ rtc:{tag:'wokwi-ds1307',name:'DS1307 RTC',g:'Diğer',d:'RTClib · gerçek saat',pins:[],fix:{SDA:'sda',SCL:'scl'}},
+ sd:{tag:'wokwi-microsd-card',name:'microSD Kart',g:'Diğer',d:'SD.h',pins:['CS'],fix:{DI:'mosi',DO:'miso',SCK:'sck'},st:{files:{}},ctrl:[{t:'files'}]},
+ resistor:{tag:'wokwi-resistor',name:'Direnç',g:'Diğer',d:'Görsel',pins:[],props:{value:'220'}},
+};
+['button6'].forEach(k=>Object.assign(PARTS[k],{ev:PARTS.button.ev,dval:PARTS.button.dval}));
+Object.assign(PARTS.slidepot,{ev:PARTS.pot.ev,aval:PARTS.pot.aval});
+const GROUPS=['Çıkış','Ekranlar','Giriş','Sensörler','Diğer'],GCOL={'Çıkış':'--red','Ekranlar':'--orange','Giriş':'--teal','Sensörler':'--green','Diğer':'--indigo'};
+for(const k in PARTS){const d=PARTS[k];d.pins=d.pins||[];d.st=d.st||{};if(d.ctrl)d.ctrl.forEach(c=>{if(c.pct){c.min=0;c.max=1;c.step=.01}})}
+
+function lcdUp(p,e,c,r){if(!p.st.dirty)return;const L=p.st.lines||[];
+  e.characters=new Uint8Array(range(0,r-1).flatMap(i=>[...(L[i]||'').padEnd(c).slice(0,c)].map(ch=>ch.charCodeAt(0)&255)));e.backlight=p.st.bl!==false;p.st.dirty=false}
+function tftUp(p,e){if(!p.st.dirty||!p.st.view||!e.canvas)return;const g=e.canvas.getContext('2d'),r=p.st.rot||0;
+  g.setTransform(...[[1,0,0,1,0,0],[0,1,-1,0,240,0],[-1,0,0,-1,240,320],[0,-1,1,0,0,320]][r]);g.drawImage(p.st.view,0,0);g.setTransform(1,0,0,1,0,0);p.st.dirty=false}
+
+function assign(p){
+  const b=BRD(),d=PARTS[p.type],used=new Set();
+  S.parts.forEach(q=>q!==p&&Object.values(q.pins).forEach(n=>used.add(n)));
+  p.pins={};
+  for(const k in d.fix||{})p.pins[k]=b[d.fix[k]];
+  for(const k of d.pins){
+    const an=d.a&&d.a.includes(k),pw=d.pwm&&d.pwm.includes(k);
+    let c=b.pins.map(x=>x.n).filter(n=>!used.has(n)&&n!=b.sda&&n!=b.scl&&!(b.avoid||[]).includes(n));
+    if(an)c=c.filter(n=>b.analog.has(n));
+    else{c=c.filter(n=>!(b.inOnly||[]).includes(n));c.sort((x,y)=>(b.analog.has(x)-b.analog.has(y))||(pw&&b.pwm?(!b.pwm.includes(x))-(!b.pwm.includes(y)):0)||x-y)}
+    const n=c[0]??null;p.pins[k]=n;if(n!=null)used.add(n);
+  }
+}
+/* ---------- runtime: Arduino API + libraries ---------- */
+const Audio_={ctx:null,o:{},
+  init(){try{this.ctx=this.ctx||new(window.AudioContext||window.webkitAudioContext)();this.ctx.resume()}catch(e){}},
+  set(id,f){if(!this.ctx)return;let o=this.o[id];
+    if(f>0&&RT.running){if(!o){o=this.ctx.createOscillator();const g=this.ctx.createGain();g.gain.value=.04;o.type='square';o.connect(g).connect(this.ctx.destination);o.start();this.o[id]=o}o.frequency.value=f}
+    else if(o){o.stop();delete this.o[id]}},
+  stopAll(){for(const k in this.o){this.o[k].stop();delete this.o[k]}}};
+
+const RT={id:0,running:false,t0:0,inBuf:'',out:''};
+const STOP={stop:1};
+const chk=rid=>{if(rid!==RT.id)throw STOP};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function fmt(x,base){
+  if(typeof x=='boolean')return x?'1':'0';
+  if(typeof x!='number')return String(x??'');
+  if(Number.isNaN(x))return 'nan';
+  if(base!=null)return Number.isInteger(x)&&[2,8,16].includes(base)?x.toString(base).toUpperCase():x.toFixed(base==10&&Number.isInteger(x)?0:base);
+  return Number.isInteger(x)?String(x):x.toFixed(2);
+}
+function sprintf(f,a){let i=0;return String(f).replace(/%(-?\d*)(?:\.(\d+))?([dilufsxXc%])/g,(m,w,p,t)=>{
+  if(t=='%')return '%';let v=a[i++],s;
+  s=t=='f'?(+v).toFixed(p??6):t=='x'?(v>>>0).toString(16):t=='X'?(v>>>0).toString(16).toUpperCase():t=='s'||t=='c'?String(v):String(Math.trunc(v));
+  const n=parseInt(w)||0;return n<0?s.padEnd(-n):s.padStart(n,w&&w[0]=='0'?'0':' ')})}
+function out(s,cls){RT.lastTx=performance.now();if(cls){flushOut();serialAppend(s,cls)}else RT.out+=s}
+function serialAppend(s,cls){const el=$('#serialOut'),bottom=el.scrollTop+el.clientHeight>=el.scrollHeight-8;
+  if(cls){const sp=document.createElement('span');sp.className=cls;sp.textContent=s;el.append(sp)}else el.append(s);
+  if(el.textContent.length>40000)el.textContent=el.textContent.slice(-20000);
+  if(bottom)el.scrollTop=el.scrollHeight}
+function flushOut(){if(RT.out){plotFeed(RT.out);serialAppend(RT.out);RT.out=''}}
+setInterval(flushOut,60);
+
+const isT=(x,t)=>Array.isArray(t)?t.includes(x.type):x.type==t;
+const partOn=(type,key,pin)=>S.parts.find(x=>isT(x,type)&&(pin==null||x.pins[key]==pin));
+function bindPart(type,key,pin){const T=Array.isArray(type)?type:[type];let p=pin!=null&&S.parts.find(x=>T.includes(x.type)&&x.pins[key]==pin&&!x._b);
+  for(const t of T){if(p)break;p=S.parts.find(x=>x.type==t&&!x._b)}if(p)p._b=1;return p||null}
+
+/* graphics base for OLED / TFT */
+class GFX{
+  constructor(p,w,h,mono){this.p=p;this.mono=mono;this.cv=document.createElement('canvas');this.size(w,h);this.cx=this.cy=0;this.ts=1;this.fg=mono?1:0xFFFF;this.bg=null;this.wr=true;this.rot=0;this.dat=0;
+    if(p){p.st.view=mono?document.createElement('canvas'):this.cv;if(mono){p.st.view.width=w;p.st.view.height=h}}this.fill(0);this.show()}
+  size(w,h){this.W=this.cv.width=w;this.H=this.cv.height=h;this.g=this.cv.getContext('2d')}
+  col(c){if(this.mono)return c?'#E6F4FF':'#000';const r=(c>>11&31)*255/31|0,g=(c>>5&63)*255/63|0,b=(c&31)*255/31|0;return`rgb(${r},${g},${b})`}
+  d(){if(!this.mono&&this.p)this.p.st.dirty=true}
+  show(){if(!this.p)return;if(this.mono){const v=this.p.st.view.getContext('2d',{willReadFrequently:true});v.drawImage(this.cv,0,0)}this.p.st.dirty=true}
+  fill(c){this.g.fillStyle=this.col(c);this.g.fillRect(0,0,this.W,this.H);this.cx=this.cy=0;this.d()}
+  width(){return this.W}height(){return this.H}
+  fillRect(x,y,w,h,c){this.g.fillStyle=this.col(c);this.g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));this.d()}
+  drawPixel(x,y,c){this.fillRect(x,y,1,1,c)}
+  drawFastHLine(x,y,w,c){this.fillRect(x,y,w,1,c)}drawFastVLine(x,y,h,c){this.fillRect(x,y,1,h,c)}
+  drawRect(x,y,w,h,c){this.fillRect(x,y,w,1,c);this.fillRect(x,y+h-1,w,1,c);this.fillRect(x,y,1,h,c);this.fillRect(x+w-1,y,1,h,c)}
+  drawLine(x0,y0,x1,y1,c){x0|=0;y0|=0;x1|=0;y1|=0;const dx=Math.abs(x1-x0),dy=-Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;let e=dx+dy;
+    this.g.fillStyle=this.col(c);for(let n=0;n<4000;n++){this.g.fillRect(x0,y0,1,1);if(x0==x1&&y0==y1)break;const e2=2*e;if(e2>=dy){e+=dy;x0+=sx}if(e2<=dx){e+=dx;y0+=sy}}this.d()}
+  fillCircle(x,y,r,c){for(let dy=-r;dy<=r;dy++){const dx=Math.floor(Math.sqrt(r*r-dy*dy));this.fillRect(x-dx,y+dy,2*dx+1,1,c)}}
+  drawCircle(x,y,r,c){let a=r,b=0,e=1-r;this.g.fillStyle=this.col(c);const pt=(i,j)=>this.g.fillRect(x+i,y+j,1,1);
+    while(a>=b){pt(a,b);pt(b,a);pt(-b,a);pt(-a,b);pt(-a,-b);pt(-b,-a);pt(b,-a);pt(a,-b);b++;if(e<0)e+=2*b+1;else{a--;e+=2*(b-a)+1}}this.d()}
+  fillRoundRect(x,y,w,h,r,c){this.fillRect(x+r,y,w-2*r,h,c);this.fillRect(x,y+r,w,h-2*r,c);[[x+r,y+r],[x+w-r-1,y+r],[x+r,y+h-r-1],[x+w-r-1,y+h-r-1]].forEach(([a,b])=>this.fillCircle(a,b,r,c))}
+  drawRoundRect(x,y,w,h,r,c){this.fillRect(x+r,y,w-2*r,1,c);this.fillRect(x+r,y+h-1,w-2*r,1,c);this.fillRect(x,y+r,1,h-2*r,c);this.fillRect(x+w-1,y+r,1,h-2*r,c);
+    const g=this.g;g.strokeStyle=this.col(c);g.lineWidth=1;[[x+r,y+r,Math.PI],[x+w-r-1,y+r,1.5*Math.PI],[x+w-r-1,y+h-r-1,0],[x+r,y+h-r-1,.5*Math.PI]].forEach(([a,b,s])=>{g.beginPath();g.arc(a+.5,b+.5,r,s,s+Math.PI/2);g.stroke()});this.d()}
+  tri(a,c,f){const g=this.g;g.beginPath();g.moveTo(a[0]+.5,a[1]+.5);g.lineTo(a[2]+.5,a[3]+.5);g.lineTo(a[4]+.5,a[5]+.5);g.closePath();if(f){g.fillStyle=this.col(c);g.fill()}else{g.strokeStyle=this.col(c);g.stroke()}this.d()}
+  fillTriangle(...a){this.tri(a,a[6],1)}drawTriangle(...a){this.tri(a,a[6],0)}
+  fillScreen(c){this.fill(c)}
+  setCursor(x,y){this.cx=x;this.cy=y}setTextSize(s){this.ts=Math.max(1,s|0)}setTextWrap(w){this.wr=w}
+  setTextColor(f,b){this.fg=f;this.bg=b===undefined?null:b}setTextDatum(d){this.dat=d}setTextFont(){}setFreeFont(){}
+  getCursorX(){return this.cx}getCursorY(){return this.cy}
+  setRotation(r){r&=3;if((r&1)!=(this.rot&1)){this.size(this.H,this.W);if(this.p&&!this.mono)this.p.st.view=this.cv;this.fill(0)}this.rot=r;if(this.p)this.p.st.rot=r}
+  ch(c,x,y){const s=this.ts;if(this.bg!=null){this.g.fillStyle=this.col(this.bg);this.g.fillRect(x,y,6*s,8*s)}
+    this.g.fillStyle=this.col(this.fg);this.g.font=`${8*s}px Menlo,ui-monospace,monospace`;this.g.textBaseline='top';this.g.fillText(c,x,y+.5*s)}
+  print(v,b){const s=fmt(v,b);for(const c of s){if(c=='\n'){this.cx=0;this.cy+=8*this.ts;continue}
+    if(this.wr&&this.cx+6*this.ts>this.W){this.cx=0;this.cy+=8*this.ts}this.ch(c,this.cx,this.cy);this.cx+=6*this.ts}this.d();return s.length}
+  println(v,b){return this.print((v===undefined?'':fmt(v,b))+'\n')}
+  textWidth(s){return String(s).length*6*this.ts}fontHeight(){return 8*this.ts}
+  drawString(v,x,y){const s=fmt(v),w=this.textWidth(s),h=8*this.ts,d=this.dat;x-=d%3==1?w/2:d%3==2?w:0;y-=d>=6?h:d>=3?h/2:0;
+    for(const c of s){this.ch(c,x,y);x+=6*this.ts}this.d();return w}
+  drawCentreString(s,x,y){const o=this.dat;this.dat=1;this.drawString(s,x,y);this.dat=o}
+  drawNumber(n,x,y){return this.drawString(String(Math.trunc(n)),x,y)}drawFloat(f,dp,x,y){return this.drawString((+f).toFixed(dp),x,y)}
+  color565(r,g,b){return((r&0xF8)<<8)|((g&0xFC)<<3)|(b>>3)}
+}
+class OLED extends GFX{constructor(){super(bindPart('oled'),128,64,true)}begin(){return true}clearDisplay(){this.fill(0)}display(){this.show()}invertDisplay(){}dim(){}startscrollright(){}stopscroll(){}}
+class TFT extends GFX{constructor(){super(bindPart('tft'),240,320,false)}init(){}begin(){}invertDisplay(){}}
+class LCD{constructor(a,c,r){this.p=bindPart(r==4||c==20?['lcd4','lcd']:['lcd','lcd4']);this.R=this.p&&this.p.type=='lcd4'?4:2;this.c=this.r=0;this.L=[];this.sync()}
+  init(){}begin(){}display(){}noDisplay(){}cursor(){}noCursor(){}blink(){}noBlink(){}createChar(){}
+  backlight(){this.p&&(this.p.st.bl=true,this.p.st.dirty=true)}noBacklight(){this.p&&(this.p.st.bl=false,this.p.st.dirty=true)}
+  clear(){this.L=[];this.c=this.r=0;this.sync()}home(){this.c=this.r=0}setCursor(c,r){this.c=c;this.r=Math.min(r,this.R-1)}
+  print(v,b){const s=fmt(v,b);for(const ch of s){const l=(this.L[this.r]||'').padEnd(this.c);this.L[this.r]=l.slice(0,this.c)+ch+l.slice(this.c+1);this.c++}this.sync();return s.length}
+  write(c){return this.print(typeof c=='number'?String.fromCharCode(c):c)}
+  sync(){if(this.p){this.p.st.lines=[...this.L];this.p.st.dirty=true}}}
+class Servo{attach(pin){this.p=bindPart('servo','PWM',pin);this.a=90;return 1}
+  write(a){this.a=Math.max(0,Math.min(180,a));if(this.p)this.p.st.angle=this.a}read(){return this.a}
+  writeMicroseconds(us){this.write((us-544)/1856*180)}attached(){return!!this.p}detach(){}}
+class NeoPixel{constructor(n,pin){this.n=n;this.p=bindPart(['ring','matrix','neopixel'],'DIN',pin);this.buf=new Array(n).fill(0);this.br=255;
+    if(this.p&&this.p.type=='ring'&&this.p.props.pixels!=n){this.p.props.pixels=n;render()}}
+  begin(){}show(){if(!this.p)return;const k=this.br/255;this.p.st.px=this.buf.map(c=>((c>>16&255)*k<<16)|((c>>8&255)*k<<8)|((c&255)*k|0));this.p.st.dirty=true}
+  setPixelColor(i,r,g,b){if(i>=0&&i<this.n)this.buf[i]=g===undefined?r:(r<<16|g<<8|b)}getPixelColor(i){return this.buf[i]|0}
+  fill(c=0,a=0,n){for(let i=a;i<(n?a+n:this.n);i++)this.buf[i]=c}
+  clear(){this.buf.fill(0)}setBrightness(b){this.br=b}numPixels(){return this.n}Color(r,g,b){return r<<16|g<<8|b}gamma32(c){return c}
+  ColorHSV(h,s=255,v=255){h=(h%65536)/65536*6;const i=h|0,f=h-i,V=v,P=v*(1-s/255),Q=v*(1-s/255*f),T=v*(1-s/255*(1-f));
+    const [r,g,b]=[[V,T,P],[Q,V,P],[P,V,T],[P,Q,V],[T,P,V],[V,P,Q]][i%6];return(r<<16)|(g<<8)|(b|0)}}
+NeoPixel.Color=(r,g,b)=>r<<16|g<<8|b;
+class DHT{constructor(pin){this.p=bindPart('dht','SDA',pin)}begin(){}
+  readTemperature(f){if(!this.p)return NaN;const t=this.p.st.t;return f?t*9/5+32:t}readHumidity(){return this.p?this.p.st.h:NaN}}
+
+function makeAPI(rid){
+  const b=BRD();let yc=0;const ledc={},ints=[];
+  const readD=n=>{if(b.mb&&(n==5||n==11))return S.mb[n==5?'a':'b']?0:1;for(const p of S.parts){const k=Object.keys(p.pins).find(k=>p.pins[k]==n);if(k==null)continue;
+      const v=PARTS[p.type].dval?PARTS[p.type].dval(p,k,P(n).mode=='PU'):null;if(v!=null)return v}
+    const p=P(n);return p.mode=='OUT'?p.v:p.mode=='PU'?1:0};
+  const pwmW=(n,v)=>{const p=P(n);p.mode='OUT';v=Math.max(0,Math.min(1,v));p.pwm=v;p.v=v>.5?1:0;
+    const s=partOn('servo','PWM',n);if(s&&!s._b)s.st.angle=v*180};
+  const api={
+    HIGH:1,LOW:0,INPUT:0,OUTPUT:1,INPUT_PULLUP:2,INPUT_PULLDOWN:3,LED_BUILTIN:b.led,BIN:2,OCT:8,DEC:10,HEX:16,PI:Math.PI,
+    CHANGE:1,FALLING:2,RISING:3,SSD1306_SWITCHCAPVCC:2,SSD1306_WHITE:1,SSD1306_BLACK:0,WHITE:1,BLACK:0,SSD1306_INVERSE:2,
+    NEO_GRB:0,NEO_RGB:0,NEO_KHZ800:0,DHT22:22,DHT11:11,WL_CONNECTED:3,WL_IDLE_STATUS:0,WL_DISCONNECTED:6,WIFI_STA:1,WIFI_AP:2,
+    TFT_BLACK:0,TFT_WHITE:0xFFFF,TFT_RED:0xF800,TFT_GREEN:0x07E0,TFT_BLUE:0x001F,TFT_YELLOW:0xFFE0,TFT_CYAN:0x07FF,TFT_MAGENTA:0xF81F,TFT_ORANGE:0xFDA0,TFT_NAVY:0x000F,TFT_DARKGREY:0x7BEF,TFT_LIGHTGREY:0xC618,TFT_PURPLE:0x780F,TFT_PINK:0xFE19,
+    ILI9341_BLACK:0,ILI9341_WHITE:0xFFFF,ILI9341_RED:0xF800,ILI9341_GREEN:0x07E0,ILI9341_BLUE:0x001F,ILI9341_YELLOW:0xFFE0,ILI9341_CYAN:0x07FF,
+    MC_DATUM:4,TL_DATUM:0,TC_DATUM:1,TR_DATUM:2,ML_DATUM:3,MR_DATUM:5,BC_DATUM:7,
+    pinMode(n,m){const p=P(n);p.mode=m==1?'OUT':m==2?'PU':'IN';if(p.mode!='OUT')p.v=p.pwm=0},
+    digitalWrite(n,v){const p=P(n);p.mode='OUT';p.v=v?1:0;p.pwm=p.v},
+    digitalRead:readD,
+    analogWrite(n,v){pwmW(n,v/255)},
+    analogRead(n){if(!b.wifi&&n<b.A.length&&!b.analog.has(n))n=b.A[n];
+      for(const p of S.parts){const d=PARTS[p.type];if(!d.aval)continue;const k=Object.keys(p.pins).find(k=>p.pins[k]==n);if(k!=null)return Math.round(Math.max(0,Math.min(1,d.aval(p,k)))*b.adc)}return Math.round(Math.random()*3)},
+    analogReadResolution(){},analogReference(){},
+    async delay(ms){chk(rid);await sleep(Math.max(0,ms));chk(rid)},
+    async delayMicroseconds(us){chk(rid);if(us>=1000)await sleep(us/1000);chk(rid)},
+    millis:()=>Math.floor(performance.now()-RT.t0),micros:()=>Math.floor((performance.now()-RT.t0)*1000),
+    map:(x,a,c,d,e)=>Math.trunc((x-a)*(e-d)/(c-a)+d),constrain:(x,a,c)=>Math.min(c,Math.max(a,x)),
+    random(a,c){if(c===undefined){c=a;a=0}return Math.floor(Math.random()*(c-a))+a},randomSeed(){},
+    abs:Math.abs,min:Math.min,max:Math.max,pow:Math.pow,sqrt:Math.sqrt,sq:x=>x*x,sin:Math.sin,cos:Math.cos,tan:Math.tan,atan2:Math.atan2,floor:Math.floor,ceil:Math.ceil,round:Math.round,
+    isnan:Number.isNaN,isinf:x=>!isFinite(x),F:s=>s,int:x=>Math.trunc(x),long:x=>Math.trunc(x),byte:x=>x&255,float:x=>+x,bool:x=>!!x,char:x=>typeof x=='number'?String.fromCharCode(x):x,
+    bit:n=>1<<n,bitRead:(x,n)=>x>>n&1,bitSet:(x,n)=>x|1<<n,bitClear:(x,n)=>x&~(1<<n),lowByte:x=>x&255,highByte:x=>x>>8&255,
+    sprintf:(buf,f,...a)=>sprintf(f,a),
+    pulseIn(n){const s=partOn('sonar','ECHO',n);return s?Math.round(s.st.d*58.82)+1:0},
+    tone(n,f,dur){const z=partOn('buzzer','1',n);if(!z)return;z.st.freq=Math.round(f);if(dur)setTimeout(()=>{if(z.st.freq==Math.round(f))z.st.freq=0},dur)},
+    noTone(n){const z=partOn('buzzer','1',n);if(z)z.st.freq=0},
+    ledcSetup(ch,f,res){ledc[ch]={res,pin:null}},ledcAttachPin(pin,ch){(ledc[ch]=ledc[ch]||{res:8}).pin=pin},
+    ledcAttach(pin,f,res){ledc['p'+pin]={res,pin};return true},
+    ledcWrite(ch,d){const c=ledc[ch]||ledc['p'+ch];if(c&&c.pin!=null)pwmW(c.pin,d/((1<<c.res)-1))},
+    ledcWriteTone(ch,f){const c=ledc[ch]||ledc['p'+ch];if(c)api.tone(c.pin,f)},
+    attachInterrupt(n,fn,mode){ints.push({n,fn,mode,last:readD(n)})},detachInterrupt(){},digitalPinToInterrupt:n=>n,
+    interrupts(){},noInterrupts(){},yield(){},
+    Serial:{begin(bd){$('#baud').textContent=bd+' baud'},end(){},print:(v,f)=>{out(fmt(v,f));return 1},println:(v,f)=>{out((v===undefined?'':fmt(v,f))+'\n');return 1},
+      printf:(f,...a)=>out(sprintf(f,a)),write:v=>out(typeof v=='number'?String.fromCharCode(v):v),available:()=>RT.inBuf.length,
+      read(){if(!RT.inBuf)return -1;const c=RT.inBuf[0];RT.inBuf=RT.inBuf.slice(1);return c},peek:()=>RT.inBuf?RT.inBuf[0]:-1,
+      readString(){const s=RT.inBuf;RT.inBuf='';return s},
+      readStringUntil(c){const i=RT.inBuf.indexOf(c);const s=i<0?RT.inBuf:RT.inBuf.slice(0,i);RT.inBuf=i<0?'':RT.inBuf.slice(i+1);return s},
+      parseInt(){const m=RT.inBuf.match(/-?\d+/);if(!m)return 0;RT.inBuf=RT.inBuf.slice(m.index+m[0].length);return+m[0]},
+      parseFloat(){const m=RT.inBuf.match(/-?\d+(\.\d+)?/);if(!m)return 0;RT.inBuf=RT.inBuf.slice(m.index+m[0].length);return+m[0]},
+      flush(){},setTimeout(){}},
+    Wire:{begin(){},beginTransmission(){},endTransmission:()=>0,write(){},requestFrom:()=>0,read:()=>0,available:()=>0},
+    SPI:{begin(){}},
+    WiFi:{_s:0,mode(){},
+      begin(ssid){if(!b.wifi)throw new Error(b.name+' kartında Wi-Fi yok. ESP32, ESP32-S3 veya Pico W seç.');this._s=6;this._id=ssid;out(`[sim] "${ssid}" ağına bağlanılıyor…\n`,'s');
+        setTimeout(()=>{if(rid==RT.id){this._s=3;const c=$('#wifiChip');c.textContent=`Wi-Fi · ${ssid} · 192.168.1.42`;c.hidden=false}},1200)},
+      status(){return this._s},isConnected(){return this._s==3},localIP(){return this._s==3?'192.168.1.42':'0.0.0.0'},RSSI:()=>-48-Math.round(Math.random()*6),
+      SSID(){return this._id||''},macAddress:()=>'24:6F:28:A1:3C:9E',disconnect(){this._s=0;$('#wifiChip').hidden=true},
+      softAP(ssid){if(!b.wifi)throw new Error(b.name+' kartında Wi-Fi yok.');out(`[sim] Erişim noktası açıldı: ${ssid} · 192.168.4.1\n`,'s');return true},softAPIP:()=>'192.168.4.1'},
+    Servo,LCD,OLED,TFT,NeoPixel,DHT,
+    async __y(){chk(rid);if(++yc%200==0){await sleep(0);chk(rid)}},
+    __ints:ints,__readD:readD,__i:v=>typeof v=='number'?Math.trunc(v):v,
+  };
+  b.A.forEach((n,i)=>{if(n!=null)api['A'+i]=n});
+  return api;
+}
+/* ---------- more libraries: RTClib, Stepper, Keypad, HX711, IRremote, SD, MPU6050 ---------- */
+function DateTime(y,mo,d,h=0,mi=0,s=0){
+  if(!(this instanceof DateTime))return new DateTime(y,mo,d,h,mi,s);
+  this.t=y instanceof Date?y:(typeof y=='string'||y===undefined)?new Date():mo===undefined?new Date(y*1000):new Date(y,mo-1,d,h,mi,s);
+}
+Object.assign(DateTime.prototype,{year(){return this.t.getFullYear()},month(){return this.t.getMonth()+1},day(){return this.t.getDate()},
+  hour(){return this.t.getHours()},minute(){return this.t.getMinutes()},second(){return this.t.getSeconds()},dayOfTheWeek(){return this.t.getDay()},
+  unixtime(){return Math.floor(this.t/1000)},timestamp(){return this.t.toISOString().slice(0,19)}});
+class RTC{constructor(){this.off=0}begin(){this.p=bindPart('rtc');return!!this.p}now(){return new DateTime(new Date(Date.now()+this.off))}
+  adjust(dt){this.off=dt.t-Date.now()}isrunning(){return true}lostPower(){return false}}
+class Stepper{constructor(n,a){this.n=n||200;this.rpm=10;this.rid=RT.id;this.p=bindPart('stepper','A-',a)}
+  setSpeed(r){this.rpm=Math.max(.1,r)}
+  async step(k){const dir=Math.sign(k),ms=60000/(this.n*this.rpm);let acc=0;
+    for(let i=0;i<Math.abs(k);i++){if(this.rid!==RT.id)throw STOP;if(this.p)this.p.st.angle=((this.p.st.angle+dir*360/this.n)%360+360)%360;acc+=ms;if(acc>=8){await sleep(acc);acc=0}}
+    if(acc)await sleep(acc)}}
+class Keypad{constructor(map){this.map=map;this.p=bindPart('keypad')}
+  getKey(){const q=this.p&&this.p.st.q;if(!q||!q.length)return '';const d=q.shift(),r=d.row??0,c=d.column??d.col??0;return(this.map&&this.map[r]&&this.map[r][c])||d.key||''}
+  getKeys(){return false}isPressed(){return false}setDebounceTime(){}setHoldTime(){}}
+class HX711{constructor(){this.sc=1;this.off=0}begin(dt){this.p=bindPart('hx711','DT',dt)}is_ready(){return true}wait_ready(){}
+  read(){return this.p?Math.round(this.p.st.w*420+(Math.random()-.5)*20):0}read_average(){return this.read()}get_value(){return this.read()-this.off}
+  get_units(){return this.get_value()/this.sc}set_scale(s=1){this.sc=s}get_scale(){return this.sc}tare(){this.off=this.read()}set_offset(o){this.off=o}get_offset(){return this.off}power_down(){}power_up(){}}
+const mkIR=()=>({p:null,decodedIRData:{command:0,address:0,protocol:8,decodedRawData:0,flags:0},
+  begin(pin){this.p=bindPart('irrecv','DAT',pin)},enableIRIn(){if(!this.p)this.p=bindPart('irrecv','DAT',this.pin)},start(){},
+  decode(res){const q=this.p&&this.p.st.q;if(!q||!q.length)return false;const c=q[0];
+    this.decodedIRData={command:c,address:0,protocol:8,decodedRawData:((~c&255)<<24|c<<16|0xFF00)>>>0,flags:0};if(res&&typeof res=='object')res.value=(0xFF0000|c<<8|(~c&255))>>>0;return true},
+  resume(){const q=this.p&&this.p.st.q;if(q)q.shift()},
+  printIRResultShort(){out(`Protocol=NEC Address=0x0 Command=0x${this.decodedIRData.command.toString(16).toUpperCase()}\n`)}});
+class IRrecv{constructor(pin){Object.assign(this,mkIR());this.pin=pin}}
+class SDFile{constructor(sd,n){this.sd=sd;this.n=n;this.pos=0}
+  get F(){return this.sd.F()}
+  print(v,b){const s=fmt(v,b);this.F[this.n]+=s;return s.length}println(v,b){return this.print((v===undefined?'':fmt(v,b))+'\n')}
+  write(v){return this.print(typeof v=='number'?String.fromCharCode(v):v)}
+  read(){const s=this.F[this.n]||'';return this.pos<s.length?s[this.pos++]:-1}peek(){const s=this.F[this.n]||'';return this.pos<s.length?s[this.pos]:-1}
+  available(){return(this.F[this.n]||'').length-this.pos}size(){return(this.F[this.n]||'').length}name(){return this.n}position(){return this.pos}seek(p){this.pos=p;return true}
+  readStringUntil(c){const s=this.F[this.n]||'';let i=s.indexOf(c,this.pos);if(i<0)i=s.length;const r=s.slice(this.pos,i);this.pos=i+1;return r}
+  flush(){this.sd.ch()}close(){this.sd.ch()}}
+const mkSD=()=>({p:null,begin(cs){this.p=bindPart('sd','CS',cs);return!!this.p},F(){return this.p?this.p.st.files:{}},
+  exists(n){return String(n).replace(/^\//,'') in this.F()},remove(n){delete this.F()[String(n).replace(/^\//,'')];this.ch();return true},mkdir(){return true},
+  open(n,m){n=String(n).replace(/^\//,'');const F=this.F();if(!this.p)return null;if(m)F[n]=F[n]||'';else if(!(n in F))return null;return new SDFile(this,n)},
+  ch(){if(this.p&&S.sel===this.p.id)showPop()}});
+class MPU{begin(){this.p=bindPart('mpu');return!!this.p}
+  getEvent(a,g,t){const s=this.p?this.p.st:{ax:0,ay:0,az:1,gx:0,gy:0,gz:0,t:0},G=9.80665,R=Math.PI/180;
+    if(a)a.acceleration={x:s.ax*G,y:s.ay*G,z:s.az*G};if(g)g.gyro={x:s.gx*R,y:s.gy*R,z:s.gz*R};if(t)t.temperature=s.t;return true}
+  setAccelerometerRange(){}setGyroRange(){}setFilterBandwidth(){}getAccelerometerRange(){return 0}getGyroRange(){return 0}}
+const _mkAPI=makeAPI;
+makeAPI=rid=>Object.assign(_mkAPI(rid),{DateTime,RTC,Stepper,Keypad,HX711,IRrecv,MPU,makeKeymap:x=>x,NO_KEY:'',
+  IrReceiver:mkIR(),SD:mkSD(),FILE_WRITE:1,FILE_READ:0,ENABLE_LED_FEEDBACK:1,DISABLE_LED_FEEDBACK:0,__DATE__:'',__TIME__:'',log:Math.log,exp:Math.exp,log10:Math.log10,fabs:Math.abs,acos:Math.acos,asin:Math.asin,atan:Math.atan});
+/* ---------- canvas rendering ---------- */
+const world=$('#world'),wires=$('#wires'),pop=$('#pop');
+const WCOL=['--orange','--blue','--green','--purple','--pink','--teal','--indigo','--yellow'];
+const BO={x:0,y:0,rot:0,e:null,el:null};
+
+function boardEl(){
+  const b=BRD(),w=document.createElement('div');w.className='wp board';w.dataset.id='board';
+  w.innerHTML=`<span class="plab">${b.name}<em> · ${b.chip} · ${b.volt}</em></span>`;
+  if(b.tag){const e=document.createElement(b.tag);w.append(e);BO.e=e}
+  else{BO.e=null;w.insertAdjacentHTML('beforeend',`<div class="part" style="position:static"><div class="body" style="padding:12px;align-items:stretch"><div class="pcb" style="background:${b.color}">
+   <div style="display:flex;gap:6px;align-items:center;font:10px var(--mono)"><i class="pled on"></i>ON <i class="pled" data-r="L" style="margin-left:6px"></i>L</div>
+   <div class="chipart">${b.chip}</div><div style="font:10px var(--mono);opacity:.75">Wi-Fi${b.bt?' · BLE':''}<br>ADC ${b.adc==4095?12:10}-bit</div></div>
+   <div class="bpins">${[...b.pins.map(p=>[p.l,p.n]),['3V3','3V3'],['5V','5V'],['GND','GND']].map(([l,n])=>`<div class="bpin">${l}<i class="dot" data-n="${n}"></i></div>`).join('')}</div></div></div>`)}
+  if(b.mb){const pc=w.querySelector('.pcb');pc.innerHTML=`<div class="mbm">${'<i></i>'.repeat(25)}</div><div class="mbb"><button data-b="a" aria-label="A butonu">A</button><span>micro:bit</span><button data-b="b" aria-label="B butonu">B</button></div>`;
+    S.mbEls=[...pc.querySelectorAll('.mbm i')];pc.querySelectorAll('.mbb button').forEach(bt=>{const k=bt.dataset.b,set=v=>{S.mb[k]=v;bt.classList.toggle('on',v)};
+      bt.addEventListener('pointerdown',e=>{e.stopPropagation();set(true)});['pointerup','pointerleave','pointercancel'].forEach(ev=>bt.addEventListener(ev,()=>set(false)))})}else S.mbEls=null;
+  return w;
+}
+function partEl(p){
+  const d=PARTS[p.type],w=document.createElement('div');w.className='wp'+(S.sel===p.id?' sel':'');w.dataset.id=p.id;
+  w.innerHTML=`<span class="plab">${d.name}<em> #${p.id}</em> <b></b></span>`;
+  if(d.custom){w.insertAdjacentHTML('beforeend',`<div class="part" style="position:static"><div class="body" style="padding:14px 14px 14px 22px"><div class="pins">${d.pins.map(k=>`<div class="pinrow"><i class="dot" data-pk="${k}"></i>${k}</div>`).join('')}</div>
+    <div class="viz"><svg width="64" height="64" viewBox="-32 -32 64 64"><circle r="30" fill="var(--label)"/><g data-r="w" fill="var(--surface)">${[0,60,120,180,240,300].map(a=>`<rect x="-2.5" y="-26" width="5" height="13" rx="2.5" transform="rotate(${a})"/>`).join('')}</g><circle r="7" fill="var(--surface)"/></svg><label data-r="t">durdu</label></div></div></div>`);
+    p.e=null;p.refs={w:w.querySelector('[data-r=w]'),t:w.querySelector('[data-r=t]')}}
+  else if(d.svg){const e=svgEl(d);w.append(e);p.e=e;d.ev&&d.ev(p,e)}
+  else{const e=document.createElement(d.tag);Object.assign(e,p.props);w.append(e);p.e=e;
+    e.addEventListener('pininfo-change',()=>S.wDirty=true);d.ev&&d.ev(p,e)}
+  p.el=w;p.badge=w.querySelector('.plab b');
+  return w;
+}
+function place(w,x,y){w.style.left=x+'px';w.style.top=y+'px'}
+function orient(p){const e=p.e,w=p.el;if(!e)return;const r=p.rot||0,ew=e.offsetWidth,eh=e.offsetHeight,s=r%180;
+  if(!r){w.style.width=w.style.height='';Object.assign(e.style,{position:'',left:'',top:'',transform:''});return}
+  const W=s?eh:ew,H=s?ew:eh;w.style.width=W+'px';w.style.height=H+'px';Object.assign(e.style,{position:'absolute',left:(W-ew)/2+'px',top:(H-eh)/2+'px',transform:`rotate(${r}deg)`})}
+function render(){
+  world.querySelectorAll('.wp').forEach(e=>e.remove());
+  const bw=boardEl();BO.el=bw;BO.x=S.bx;BO.y=S.by;place(bw,S.bx,S.by);world.append(bw);
+  S.boardL=bw.querySelector('[data-r=L]');
+  S.parts.forEach(p=>{const w=partEl(p);place(w,p.x,p.y);world.append(w);p.st.dirty=true;p.e&&Promise.resolve(p.e.updateComplete).then(()=>{orient(p);S.wDirty=true;placePop(S.parts.find(x=>x.id===S.sel))})});
+  $('#partCount').textContent=S.parts.length?`${S.parts.length} parça`:'';
+  requestAnimationFrame(()=>{S.wDirty=true;showPop()});save();
+}
+
+/* pin positions in world coordinates */
+function measure(el){const wr=world.getBoundingClientRect(),r=el.getBoundingClientRect();return{x:(r.left+r.width/2-wr.left)/S.zoom,y:(r.top+r.height/2-wr.top)/S.zoom}}
+function pinXY(o,name){
+  if(!o.e){const dot=o.el.querySelector(`.dot[data-pk="${name}"],.dot[data-n="${name}"]`);return dot?measure(dot):null}
+  const pi=(o.e.pinInfo||[]).find(q=>q.name==name);if(!pi)return null;
+  let x=pi.x,y=pi.y;const r=(o.rot||0)*Math.PI/180;
+  if(r){const dx=x-o.e.offsetWidth/2,dy=y-o.e.offsetHeight/2;x=o.el.offsetWidth/2+dx*Math.cos(r)-dy*Math.sin(r);y=o.el.offsetHeight/2+dx*Math.sin(r)+dy*Math.cos(r)}
+  return{x:o.x+x,y:o.y+y};
+}
+const boardPin=n=>BO.e?pinXY(BO,BRD().pn(n)):pinXY(BO,n);
+function powerPins(p){const d=PARTS[p.type],out={};if(!p.e)return out;
+  for(const q of p.e.pinInfo||[]){if(d.pins.includes(q.name)||(d.fix&&q.name in d.fix))continue;
+    const s=(q.signals||[]).find(s=>s.type=='power');
+    if((d.gnd||[]).includes(q.name)||(s&&s.signal=='GND'))out.gnd=out.gnd||q.name;else if(s&&s.signal=='VCC')out.vcc=out.vcc||q.name}
+  return out}
+/* simulation controls popover (sensors) */
+function showPop(){
+  const p=S.parts.find(x=>x.id===S.sel),d=p&&PARTS[p.type];
+  if(!d||!d.ctrl){pop.hidden=true;return}
+  pop.hidden=false;pop.innerHTML=`<strong>${d.name}</strong>`+d.ctrl.map((c,i)=>c.t=='tog'?
+    `<label class="tog"><input type="checkbox" id="pc${i}" ${p.st[c.k]?'checked':''}><span></span>${c.l}</label>`:
+    c.t=='term'?termHtml(p):c.t=='cards'?cardsHtml(p):c.t=='files'?`<div class="files">${Object.keys(p.st.files).length?Object.entries(p.st.files).map(([n,t])=>`<details><summary>${n}<em>${t.length} B</em></summary><pre>${t.replace(/</g,'&lt;').slice(-2000)}</pre></details>`).join(''):'<p class="sub">Kart boş. SD.open ile dosya yazılınca burada görünür.</p>'}</div>`:
+    `<label for="pc${i}">${c.l}<b id="pv${i}"></b></label><input type="range" id="pc${i}" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${p.st[c.k]}">`).join('');
+  d.ctrl.forEach((c,i)=>{const inp=pop.querySelector('#pc'+i),out=pop.querySelector('#pv'+i);if(!inp)return;
+    const show=()=>{if(out)out.textContent=c.pct?'%'+Math.round(p.st[c.k]*100):(+p.st[c.k]).toFixed(c.step&&c.step<1?(c.step<.1?2:1):0)+(c.u||'')};show();
+    inp.addEventListener('input',()=>{p.st[c.k]=c.t=='tog'?inp.checked:+inp.value;show()});inp.addEventListener('change',()=>{p.st[c.k]=c.t=='tog'?inp.checked:+inp.value;save()})});
+  bindPopExtra(p);placePop(p);
+}
+function placePop(p){if(pop.hidden||!p||!p.el)return;pop.style.left=p.x+'px';pop.style.top=(p.y+p.el.offsetHeight+14)+'px'}
+
+/* frame loop: pins → visuals */
+let lastT=performance.now();
+function frame(t){
+  const dt=(t-lastT)/1000;lastT=t;
+  for(const p of S.parts){const d=PARTS[p.type];
+    if(p.type=='motor'){const a=P(p.pins.IN1).v,b=P(p.pins.IN2).v,sp=p.pins.ENA==null?1:lvl(p.pins.ENA),dir=a&&!b?1:b&&!a?-1:0;
+      p.st.rot=(p.st.rot+dir*sp*dt*540)%360;p.refs.w.setAttribute('transform',`rotate(${p.st.rot})`);p.refs.t.textContent=dir?`${dir>0?'ileri':'geri'} %${Math.round(sp*100)}`:'durdu'}
+    else if(d.up&&p.e)d.up(p,p.e,dt);
+    if(p.badge&&p.badge.textContent!==(p.st.badge||'')){p.badge.textContent=p.st.badge||'';p.badge.classList.toggle('err',!!p.st.badgeErr)}
+  }
+  const b=BRD(),on=lvl(b.led)>.5;
+  if(BO.e){BO.e[b.ledProp]=on;BO.e.ledPower=true;if('ledTX' in BO.e)BO.e.ledTX=performance.now()-(RT.lastTx||0)<80}
+  else if(S.boardL)S.boardL.classList.toggle('on',on);
+  if(S.mbEls)S.mbEls.forEach((el,i)=>el.classList.toggle('on',!!S.mb.px[i]));
+  if(S.wDirty)drawWires();
+  requestAnimationFrame(frame);
+}
+/* ---------- Tinkercad basics drawn in SVG: breadboard, passives, batteries, motors, extra sensors ---------- */
+const PT=9.6; // 2.54 mm pitch in wokwi px
+function bbGeo(cols,rails){const r={cols,rails,R0:12};r.R1=r.R0+PT;r.A=rails?r.R1+2.6*PT:12;r.F=r.A+7*PT;r.J=r.F+4*PT;r.BN=r.J+2.6*PT;r.BP=r.BN+PT;r.H=(rails?r.BP:r.J)+12;r.W=2*16+(cols-1)*PT;return r}
+const bbRows=bbGeo(30,1);
+const bbX=c=>16+(c-1)*PT,railCol=c=>(c-1)%6!=5;
+function bbPins(g){const r=g,L=[];
+  for(let c=1;c<=r.cols;c++){'abcde'.split('').forEach((k,i)=>L.push({name:k+c,x:bbX(c),y:r.A+i*PT,signals:[]}));'fghij'.split('').forEach((k,i)=>L.push({name:k+c,x:bbX(c),y:r.F+i*PT,signals:[]}));
+    if(r.rails&&railCol(c))[['tp',r.R0],['tn',r.R1],['bn',r.BN],['bp',r.BP]].forEach(([k,y])=>L.push({name:k+c,x:bbX(c),y,signals:[]}))}
+  return L}
+function bbSvg(g){const r=g;let h=`<rect x=".5" y=".5" width="${r.W-1}" height="${r.H-1}" rx="5" fill="#F4F4F2" stroke="#C9C9C4"/>
+  <rect x="4" y="${r.A+4*PT+PT*.7}" width="${r.W-8}" height="${PT*1.6}" fill="#E4E4DF"/>`+(r.rails?`
+  <path d="M8 ${r.R0-6}H${r.W-8}" stroke="#FF3B30" stroke-width="1.2"/><path d="M8 ${r.R1+6}H${r.W-8}" stroke="#007AFF" stroke-width="1.2"/>
+  <path d="M8 ${r.BN-6}H${r.W-8}" stroke="#007AFF" stroke-width="1.2"/><path d="M8 ${r.BP+6}H${r.W-8}" stroke="#FF3B30" stroke-width="1.2"/>`:'');
+  for(const q of bbPins(r))h+=`<rect x="${q.x-2}" y="${q.y-2}" width="4" height="4" rx=".8" fill="#4A4A48"/>`;
+  'abcdefghij'.split('').forEach((k,i)=>{const y=(i<5?r.A+i*PT:r.F+(i-5)*PT)+2.5;h+=`<text x="5" y="${y}" font-size="6" fill="#8A8A85" font-family="Menlo,monospace">${k}</text><text x="${r.W-10}" y="${y}" font-size="6" fill="#8A8A85" font-family="Menlo,monospace">${k}</text>`});
+  if(r.rails)for(let c=1;c<=r.cols;c+=c==1?4:5)h+=`<text x="${bbX(c)}" y="${r.A-5}" font-size="5.5" text-anchor="middle" fill="#8A8A85" font-family="Menlo,monospace">${c}</text>`;
+  return `<svg width="${r.W}" height="${r.H}" viewBox="0 0 ${r.W} ${r.H}">${h}</svg>`}
+const mkBB=(name,d,cols,rails)=>{const g=bbGeo(cols,rails);return SV({name,g:'Temel',d,w:g.W,h:g.H,draw:()=>bbSvg(g),pinList:()=>bbPins(g),bb:g})};
+
+const leg=(x,y1,y2,c='#A8A8A8')=>`<path d="M${x} ${y1}V${y2}" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/>`;
+const to92=(lab,col='#2C2C2E')=>`<path d="M3 6a12 12 0 0 1 24 0v16H3z" fill="${col}"/><text x="15" y="18" font-size="7" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">${lab}</text>${leg(5.4,22,42)}${leg(15,22,42)}${leg(24.6,22,42)}`;
+const modBoard=(w,h,lab,col,pins)=>`<rect x="1" y="12" width="${w-2}" height="${h-13}" rx="3" fill="${col}"/>${pins.map((n,i)=>`<rect x="${w/2-(pins.length-1)*PT/2+i*PT-2.5}" y="0" width="5" height="13" fill="#1C1C1E"/><text x="${w/2-(pins.length-1)*PT/2+i*PT}" y="21" font-size="4.5" text-anchor="middle" fill="#fff" font-family="Menlo,monospace">${n}</text>`).join('')}<text x="${w/2}" y="${h-5}" font-size="6" text-anchor="middle" fill="#ffffffcc" font-family="-apple-system,sans-serif">${lab}</text>`;
+const modPins=(w,pins,sig)=>pins.map((n,i)=>[n,w/2-(pins.length-1)*PT/2+i*PT,1,sig[n]]);
+const SV=(o)=>Object.assign({svg:1},o);
+const lvNet=(p,k)=>netLevel(p.nodes&&p.nodes[k]);
+const motorUp=(a,b,rate)=>(p,e,dt)=>{const x=lvNet(p,a),y=lvNet(p,b),v=x!=null&&y!=null?x-y:0;p.st.rot=((p.st.rot||0)+v*dt*rate)%360;
+  const g=e.querySelector('.rot');if(g)g.setAttribute('transform',`rotate(${p.st.rot} ${g.dataset.cx} ${g.dataset.cy})`);e.classList.toggle('vib',Math.abs(v)>.05);p.st.badge=Math.abs(v)>.05?(v>0?'↻ ':'↺ ')+Math.round(Math.abs(v)*100)+'%':''};
+Object.assign(PARTS,{
+ bb:mkBB('Breadboard','30 sütun · bacakları deliğe oturt',30,1),
+ bbmini:mkBB('Mini Breadboard','17 sütun · ray yok',17,0),
+ bbfull:mkBB('Büyük Breadboard','63 sütun · tam boy',63,1),
+ cap:SV({name:'Kondansatör',g:'Temel',d:'Seramik · 100 nF',w:28,h:46,pinXY:[['1',9.2,44],['2',18.8,44]],
+   draw:()=>`${leg(9.2,20,44)}${leg(18.8,20,44)}<ellipse cx="14" cy="14" rx="12" ry="11" fill="#2F6FD6"/><text x="14" y="16.5" font-size="7" text-anchor="middle" fill="#fff" font-family="Menlo,monospace">104</text>`}),
+ ecap:SV({name:'Elektrolitik Kond.',g:'Temel',d:'100 µF · kutuplu',w:26,h:58,pinXY:[['+',8.2,56],['-',17.8,56]],
+   draw:()=>`${leg(8.2,34,56)}${leg(17.8,34,56)}<rect x="2" y="2" width="22" height="33" rx="4" fill="#20325A"/><rect x="17" y="2" width="7" height="33" fill="#9DB3D8"/><text x="20.5" y="14" font-size="7" text-anchor="middle" fill="#20325A">−</text><rect x="2" y="2" width="22" height="4" rx="2" fill="#C7C7CC"/>`}),
+ diode:SV({name:'Diyot',g:'Temel',d:'1N4007 · A → K',w:62,h:16,pinXY:[['A',6.8,8],['K',54.8,8]],
+   draw:()=>`<path d="M6.8 8H54.8" stroke="#A8A8A8" stroke-width="1.6"/><rect x="20" y="3" width="22" height="10" rx="2" fill="#1C1C1E"/><rect x="36" y="3" width="3.5" height="10" fill="#D1D1D6"/>`}),
+ npn:SV({name:'NPN Transistör',g:'Temel',d:'BC547 · E B C',w:30,h:44,pinXY:[['E',5.4,42],['B',15,42],['C',24.6,42]],draw:()=>to92('N'),npn:1}),
+ bat9:SV({name:'9 V Pil',g:'Temel',d:'+ ve − kutup',w:56,h:98,pinXY:[['+',18.8,6,'vcc'],['-',37.2,6,'gnd']],pow:1,
+   draw:()=>`<rect x="2" y="12" width="52" height="84" rx="5" fill="#2C2C2E"/><rect x="2" y="12" width="52" height="22" rx="5" fill="#FF9F0A"/><circle cx="18.8" cy="8" r="5" fill="#C7C7CC"/><path d="M33 3h8.4v9H33z" fill="#C7C7CC"/><text x="28" y="66" font-size="16" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">9V</text>`}),
+ batAA:SV({name:'1,5 V Pil',g:'Temel',d:'AA · + ve −',w:100,h:30,pinXY:[['-',4,15,'gnd'],['+',96,15,'vcc']],pow:1,
+   draw:()=>`<rect x="6" y="3" width="84" height="24" rx="4" fill="#1C1C1E"/><rect x="62" y="3" width="28" height="24" fill="#B7791F"/><rect x="90" y="9" width="6" height="12" rx="1.5" fill="#C7C7CC"/><text x="36" y="19" font-size="9" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">1.5V</text>`}),
+ coin:SV({name:'3 V Düğme Pil',g:'Temel',d:'CR2032 yuvası',w:52,h:60,pinXY:[['+',21.2,58,'vcc'],['-',30.8,58,'gnd']],pow:1,
+   draw:()=>`${leg(21.2,46,58)}${leg(30.8,46,58)}<rect x="2" y="2" width="48" height="46" rx="8" fill="#2C2C2E"/><circle cx="26" cy="24" r="19" fill="#D1D1D6" stroke="#8E8E93"/><text x="26" y="27" font-size="7" text-anchor="middle" fill="#3A3A3C" font-family="Menlo,monospace">CR2032</text>`}),
+ dcm:SV({name:'DC Motor',g:'Çıkış',d:'2 uçlu · yön ve hız',w:62,h:72,pinXY:[['1',26.2,70],['2',35.8,70]],up:motorUp('1','2',900),st:{rot:0},
+   draw:()=>`${leg(26.2,58,70,'#D1D1D6')}${leg(35.8,58,70,'#D1D1D6')}<circle cx="31" cy="30" r="28" fill="#AEAEB2" stroke="#8E8E93"/><g class="rot" data-cx="31" data-cy="30"><path d="M31 8v44M9 30h44" stroke="#636366" stroke-width="3"/><circle cx="31" cy="30" r="6" fill="#FFCC00"/></g>`}),
+ vib:SV({name:'Titreşim Motoru',g:'Çıkış',d:'Coin tipi · 3 V',w:38,h:62,pinXY:[['+',14.2,60],['-',23.8,60]],up:motorUp('+','-',0),
+   draw:()=>`<path d="M14.2 36V60" stroke="#FF3B30" stroke-width="1.6"/><path d="M23.8 36V60" stroke="#1C1C1E" stroke-width="1.6"/><circle cx="19" cy="19" r="17" fill="#3A3A3C"/><circle cx="19" cy="19" r="12" fill="#48484A"/>`}),
+ gear:SV({name:'Redüktörlü Motor',g:'Çıkış',d:'Sarı TT · tekerlek motoru',w:104,h:54,pinXY:[['1',4,22],['2',4,31.6]],up:motorUp('1','2',360),st:{rot:0},
+   draw:()=>`<path d="M4 22h10M4 31.6h10" stroke="#A8A8A8" stroke-width="1.6"/><rect x="12" y="10" width="60" height="34" rx="4" fill="#FFCC00"/><rect x="12" y="14" width="18" height="26" fill="#E8B800"/><g class="rot" data-cx="84" data-cy="27"><circle cx="84" cy="27" r="18" fill="#F2F2F7" stroke="#C7C7CC"/><path d="M84 11v32M68 27h32" stroke="#8E8E93" stroke-width="2.5"/></g>`}),
+ tmp36:SV({name:'TMP36 Sıcaklık',g:'Sensörler',d:'Analog · 10 mV/°C',w:30,h:44,pinXY:[['+Vs',5.4,42,'vcc'],['Vout',15,42],['GND',24.6,42,'gnd']],pins:['Vout'],a:['Vout'],
+   st:{t:25},ctrl:[{k:'t',l:'Sıcaklık',min:-40,max:125,step:.5,u:' °C'}],aval:p=>(500+10*p.st.t)/(BRD().volt=='5V'?5000:3300),draw:()=>to92('T','#3A3A3C')}),
+ soil:SV({name:'Toprak Nemi',g:'Sensörler',d:'Analog · AO',w:44,h:118,pinXY:modPins(44,['VCC','GND','SIG'],{VCC:'vcc',GND:'gnd'}),pins:['SIG'],a:['SIG'],st:{v:.35},ctrl:[{k:'v',l:'Nem',pct}],aval:p=>p.st.v,
+   draw:()=>modBoard(44,40,'NEM','#1E5AA8',['VCC','GND','SIG'])+`<path d="M8 40h10v68l-5 8-5-8zM26 40h10v68l-5 8-5-8z" fill="#D4A017"/>`}),
+ fsr:SV({name:'Kuvvet Sensörü',g:'Sensörler',d:'FSR modülü · analog',w:44,h:92,pinXY:modPins(44,['VCC','GND','SIG'],{VCC:'vcc',GND:'gnd'}),pins:['SIG'],a:['SIG'],st:{v:0},ctrl:[{k:'v',l:'Basınç',pct}],aval:p=>p.st.v,
+   draw:()=>modBoard(44,40,'FSR','#2F7D46',['VCC','GND','SIG'])+`<path d="M18 40h8v18h-8z" fill="#C7C7CC"/><circle cx="22" cy="72" r="18" fill="#2C2C2E" stroke="#8E8E93"/><circle cx="22" cy="72" r="11" fill="none" stroke="#C7A86B" stroke-dasharray="3 2"/>`}),
+ flex:SV({name:'Esneklik Sensörü',g:'Sensörler',d:'Flex modülü · analog',w:44,h:120,pinXY:modPins(44,['VCC','GND','SIG'],{VCC:'vcc',GND:'gnd'}),pins:['SIG'],a:['SIG'],st:{v:0},ctrl:[{k:'v',l:'Bükülme',pct}],aval:p=>.3+p.st.v*.6,
+   draw:()=>modBoard(44,40,'FLEX','#5856D6',['VCC','GND','SIG'])+`<rect x="15" y="40" width="14" height="78" rx="3" fill="#3A3A3C"/><path d="M19 46v66M25 46v66" stroke="#C7A86B" stroke-width="1.2"/>`}),
+ irobs:SV({name:'IR Engel Sensörü',g:'Sensörler',d:'FC-51 · engelde LOW',w:44,h:72,pinXY:modPins(44,['OUT','GND','VCC'],{VCC:'vcc',GND:'gnd'}),pins:['OUT'],st:{on:false},ctrl:[{k:'on',l:'Önünde engel var',t:'tog'}],dval:p=>p.st.on?0:1,
+   up:(p,e)=>e.querySelector('.ind').setAttribute('fill',p.st.on?'#34C759':'#1C3A22'),
+   draw:()=>modBoard(44,60,'IR','#1E5AA8',['OUT','GND','VCC'])+`<circle class="ind" cx="36" cy="30" r="2.5" fill="#1C3A22"/><circle cx="15" cy="64" r="6" fill="#E5E5EA"/><circle cx="29" cy="64" r="6" fill="#1C1C1E"/>`}),
+ line:SV({name:'Çizgi İzleyen Sensör',g:'Sensörler',d:'TCRT5000 · siyah çizgide HIGH',w:44,h:72,pinXY:modPins(44,['VCC','GND','DO','AO'],{VCC:'vcc',GND:'gnd'}),pins:['DO','AO'],a:['AO'],st:{on:false},
+   ctrl:[{k:'on',l:'Siyah çizginin üstünde',t:'tog'}],dval:p=>p.st.on?1:0,aval:p=>p.st.on?.9:.12,up:(p,e)=>e.querySelector('.ind').setAttribute('fill',p.st.on?'#34C759':'#1C3A22'),
+   draw:()=>modBoard(44,60,'ÇİZGİ','#2C2C2E',['VCC','GND','DO','AO'])+`<circle class="ind" cx="36" cy="30" r="2.5" fill="#1C3A22"/><rect x="12" y="56" width="20" height="12" rx="2" fill="#1C1C1E"/><circle cx="17" cy="62" r="3.5" fill="#5E5CE6"/><circle cx="27" cy="62" r="3.5" fill="#E5E5EA"/>`}),
+});
+PARTS.resistor.g='Temel';
+GROUPS.unshift('Temel');GCOL['Temel']='--blue';
+for(const k in PARTS){const d=PARTS[k];if(!d.svg)continue;d.st=d.st||{};d.pins=d.pins||[];if(d.ctrl)d.ctrl.forEach(c=>{if(c.pct){c.min=0;c.max=1;c.step=.01}});
+  if(d.pinXY&&!d.pinList)d.pinList=()=>d.pinXY.map(([name,x,y,s])=>({name,x,y,signals:s?[{type:'power',signal:s=='vcc'?'VCC':'GND'}]:[]}))}
+function svgEl(d){const e=document.createElement('div');e.className='cp';e.style.width=d.w+'px';e.style.height=d.h+'px';
+  e.innerHTML=d.bb?d.draw():`<svg width="${d.w}" height="${d.h}" viewBox="0 0 ${d.w} ${d.h}">${d.draw()}</svg>`;e.pinInfo=d.pinList();return e}
+/* LED needs a closed circuit: anode level − cathode level */
+PARTS.led.up=(p,e)=>{const a=lvNet(p,'A'),c=lvNet(p,'C'),v=a!=null&&c!=null?Math.max(0,a-c):0;e.value=v>0;e.brightness=v};
+
+function netLevel(r,d=0){if(r==null||d>4)return null;const i=S.netInfo&&S.netInfo.get(r);if(!i)return null;
+  if(i.gpio!=null){const q=P(i.gpio);return q.mode=='OUT'?q.pwm:(q.mode=='PU'?1:null)}
+  if(i.vcc)return 1;if(i.gnd)return 0;
+  for(const t of i.tc){const b=netLevel(t.nodes.B,d+1),e=netLevel(t.nodes.E,d+1);if(b!=null&&b>.5&&e===0)return 0}
+  for(const t of i.tp||[]){const b=netLevel(t.nodes.B,d+1),e=netLevel(t.nodes.E,d+1);if(e===1&&b!=null&&b<.5)return 1}
+  for(const [t,x] of i.dr||[]){const a=netLevel(t.nodes['IN'+x],d+1),e=netLevel(t.nodes[x<3?'ENA':'ENB'],d+1);if(a!=null)return a>.5?(e==null?1:e):0}
+  for(const g of i.rg||[])if(netLevel(g.nodes.IN,d+1)===1&&netLevel(g.nodes.GND,d+1)===0)return 1;
+  return null}
+/* ---------- BBC micro:bit board, PNP transistor, 7805 regulator ---------- */
+BOARDS.microbit=mkBoard({name:'BBC micro:bit',chip:'nRF51822',color:'#1C1C1E',pre:'P',adc:1023,volt:'3.3V',bt:1,sda:20,scl:19,mosi:15,miso:14,sck:13,led:null,mb:1,
+  vcc:'3V3',gnd:'GND',avoid:[5,11],pins:[...range(0,16),19,20],A:[0,1,2,3,4,10]});
+S.mb={px:new Array(25).fill(0),a:false,b:false};
+const MBF={' ':[0,0,0,0,0],'0':[14,19,21,25,14],'1':[4,12,4,4,14],'2':[28,2,12,16,30],'3':[30,2,4,17,14],'4':[6,10,18,31,2],'5':[31,16,30,1,30],'6':[2,4,14,17,14],
+ '7':[31,2,4,8,16],'8':[14,17,14,17,14],'9':[14,17,14,4,8],A:[12,18,18,30,18],B:[28,18,28,18,28],C:[14,16,16,16,14],D:[28,18,18,18,28],E:[30,16,28,16,30],F:[30,16,28,16,16],
+ G:[14,16,19,17,14],H:[18,18,30,18,18],I:[28,8,8,8,28],J:[31,2,2,18,12],K:[18,20,24,20,18],L:[16,16,16,16,30],M:[17,27,21,17,17],N:[17,25,21,19,17],O:[12,18,18,18,12],
+ P:[28,18,28,16,16],Q:[12,18,18,12,3],R:[28,18,28,20,18],S:[14,16,12,2,28],T:[31,4,4,4,4],U:[18,18,18,18,12],V:[17,17,17,10,4],W:[17,17,21,27,17],X:[18,18,12,18,18],
+ Y:[17,10,4,4,4],Z:[30,4,8,16,30],'!':[8,8,8,0,8],'?':[14,17,2,0,4],':':[0,4,0,4,0],'-':[0,0,14,0,0],'.':[0,0,0,0,8],'+':[0,4,14,4,0],'=':[0,14,0,14,0],'<':[2,4,8,4,2],'>':[8,4,2,4,8]};
+const trAscii=s=>String(s).toUpperCase().replace(/[İI]/g,'I').replace(/Ş/g,'S').replace(/Ğ/g,'G').replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C');
+function mbCols(text){const cols=[];for(const ch of trAscii(text)){const g=MBF[ch]||MBF['?'];for(let x=0;x<5;x++)cols.push(g.map(r=>r>>(4-x)&1));cols.push([0,0,0,0,0])}return cols}
+function mbFrame(cols,off){for(let x=0;x<5;x++)for(let y=0;y<5;y++)S.mb.px[y*5+x]=(cols[off+x]||[0,0,0,0,0])[y]}
+class MBMatrix{constructor(){this.rid=RT.id;this.tok=0}begin(){S.mb.px.fill(0)}clear(){this.tok++;S.mb.px.fill(0)}fillScreen(c){this.tok++;S.mb.px.fill(c?1:0)}
+  drawPixel(x,y,c){if(x>=0&&x<5&&y>=0&&y<5)S.mb.px[y*5+x]=c?1:0}
+  show(rows){this.tok++;for(let y=0;y<5;y++)for(let x=0;x<5;x++)S.mb.px[y*5+x]=(rows[y]>>(4-x))&1}
+  print(v){const s=fmt(v);this.tok++;if(s.length==1){mbFrame(mbCols(s),0);return}const t=this.tok,c=[[0,0,0,0,0],...mbCols(s)];let o=0;
+    const step=()=>{if(t!==this.tok||this.rid!==RT.id)return;mbFrame(c,o);if(++o<=c.length)setTimeout(step,130)};step()}
+  async scrollText(v,ms=130){const t=++this.tok,c=[[0,0,0,0,0],...mbCols(fmt(v))];for(let o=0;o<=c.length;o++){if(this.rid!==RT.id)throw STOP;if(t!==this.tok)return;mbFrame(c,o);await sleep(ms)}}}
+class MBObj{constructor(){this.matrix=new MBMatrix()}begin(){this.matrix.begin()}}
+
+PARTS.pnp=SV({name:'PNP Transistör',g:'Temel',d:'BC557 · E B C',w:30,h:44,pinXY:[['E',5.4,42],['B',15,42],['C',24.6,42]],draw:()=>to92('P'),pnp:1});
+PARTS.reg=SV({name:'Voltaj Regülatörü',g:'Temel',d:'7805 · IN GND OUT',w:40,h:76,pinXY:[['IN',10.4,74],['GND',20,74],['OUT',29.6,74]],reg:1,
+  draw:()=>`${leg(10.4,48,74)}${leg(20,48,74)}${leg(29.6,48,74)}<rect x="2" y="2" width="36" height="22" rx="2" fill="#C7C7CC"/><circle cx="20" cy="12" r="5" fill="#F2F2F7" stroke="#8E8E93"/><rect x="2" y="22" width="36" height="28" rx="2" fill="#1C1C1E"/><text x="20" y="40" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" font-family="Menlo,monospace">7805</text>`});
+['pnp','reg'].forEach(k=>{const d=PARTS[k];d.st={};d.pins=[];d.pinList=()=>d.pinXY.map(([name,x,y])=>({name,x,y,signals:[]}))});
+const _mkMB=makeAPI;
+makeAPI=rid=>Object.assign(_mkMB(rid),{MBMatrix,MBObj,PIN_BUTTON_A:5,PIN_BUTTON_B:11,LED_ON:1,LED_OFF:0});
+/* ---------- more boards and parts: displays, drivers, comms, instruments ---------- */
+Object.assign(BOARDS,{
+ c3:mkBoard({name:'ESP32-C3 SuperMini',chip:'ESP32-C3',color:'#2B2B2E',pre:'G',adc:4095,volt:'3.3V',wifi:1,bt:1,sda:8,scl:9,mosi:6,miso:5,sck:4,led:8,avoid:[2,8,9],vcc:'3V3',gnd:'GND',pins:[...range(0,10),20,21],A:range(0,4)}),
+ leonardo:mkBoard({name:'Arduino Leonardo',chip:'ATmega32U4',color:'#00878F',pre:'D',adc:1023,volt:'5V',sda:2,scl:3,mosi:16,miso:14,sck:15,led:13,pwm:[3,5,6,9,10,11,13],avoid:[0,1],vcc:'5V',gnd:'GND',
+   pins:range(0,23),lab:n=>avr(n,18),A:range(18,23)}),
+ promini:mkBoard({name:'Arduino Pro Mini',chip:'ATmega328P',color:'#1E5AA8',pre:'D',adc:1023,volt:'5V',sda:18,scl:19,mosi:11,miso:12,sck:13,led:13,pwm:[3,5,6,9,10,11],avoid:[0,1],vcc:'5V',gnd:'GND',
+   pins:range(0,21),lab:n=>avr(n,14),A:range(14,21)}),
+});
+Object.assign(PARTS.bat9,{volts:9});Object.assign(PARTS.batAA,{volts:1.5});Object.assign(PARTS.coin,{volts:3});
+const hdr=(w,y,names,sig={})=>names.map((n,i)=>[n,w/2-(names.length-1)*PT/2+i*PT,y,sig[n]]);
+const hdrSvg=(w,y,names,lab=1)=>names.map((n,i)=>{const x=w/2-(names.length-1)*PT/2+i*PT;return `<rect x="${x-2.6}" y="${y-5}" width="5.2" height="10" fill="#1C1C1E"/>`+(lab?`<text x="${x}" y="${y>20?y-8:y+12}" font-size="4.2" text-anchor="middle" fill="#fff" font-family="Menlo,monospace">${n}</text>`:'')}).join('');
+const SEGR=(x,y)=>[[x+3,y,14,3],[x+17,y+3,3,12],[x+17,y+17,3,12],[x+3,y+29,14,3],[x,y+17,3,12],[x,y+3,3,12],[x+3,y+14.5,14,3]];
+const pw2=(a,b)=>[[a,'vcc'],[b,'gnd']];
+const svgP=(o)=>{const d=SV(o);d.st=d.st||{};d.pins=d.pins||[];d.pinList=()=>d.pinXY.map(([name,x,y,s])=>({name,x,y,signals:s?[{type:'power',signal:s=='vcc'?'VCC':'GND'}]:[]}));if(d.ctrl)d.ctrl.forEach(c=>{if(c.pct){c.min=0;c.max=1;c.step=.01}});return d};
+Object.assign(PARTS,{
+ tm1637:svgP({name:'4 Haneli Ekran',g:'Ekranlar',d:'TM1637 · CLK DIO',w:122,h:64,pins:['CLK','DIO'],pinXY:hdr(122,58,['CLK','DIO','VCC','GND'],{VCC:'vcc',GND:'gnd'}),st:{seg:[0,0,0,0]},
+   draw:()=>`<rect x="1" y="1" width="120" height="62" rx="4" fill="#1E5AA8"/><rect x="6" y="5" width="110" height="42" rx="2" fill="#141414"/>`+[0,1,2,3].map(i=>SEGR(12+i*25+(i>1?6:0),10).map((r,s)=>`<rect class="s${i}${s}" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}" rx="1.2" fill="#3A1C1C"/>`).join('')).join('')+
+     `<circle class="cl" cx="64" cy="20" r="2" fill="#3A1C1C"/><circle class="cl" cx="64" cy="32" r="2" fill="#3A1C1C"/>`+hdrSvg(122,58,['CLK','DIO','VCC','GND']),
+   up:(p,e)=>{if(!p.st.dirty)return;p.st.dirty=false;const on='#FF3B30',off='#3A1C1C';for(let i=0;i<4;i++)for(let s=0;s<7;s++){const el=e.querySelector('.s'+i+s);el&&el.setAttribute('fill',(p.st.seg[i]>>s)&1?on:off)}
+     e.querySelectorAll('.cl').forEach(c=>c.setAttribute('fill',p.st.seg[1]&0x80?on:off))}}),
+ max7219:svgP({name:'8×8 LED Matris',g:'Ekranlar',d:'MAX7219 · LedControl',w:104,h:118,pins:['DIN','CS','CLK'],pinXY:hdr(104,112,['VCC','GND','DIN','CS','CLK'],{VCC:'vcc',GND:'gnd'}),st:{m:[0,0,0,0,0,0,0,0]},
+   draw:()=>`<rect x="1" y="1" width="102" height="116" rx="3" fill="#1C1C1E"/>`+range(0,63).map(i=>`<circle class="m${i}" cx="${10+(i%8)*12}" cy="${10+Math.floor(i/8)*12}" r="4.6" fill="#3A1C1C"/>`).join('')+`<rect x="1" y="100" width="102" height="17" fill="#1E5AA8"/>`+hdrSvg(104,112,['VCC','GND','DIN','CS','CLK']),
+   up:(p,e)=>{if(!p.st.dirty)return;p.st.dirty=false;for(let i=0;i<64;i++)e.querySelector('.m'+i).setAttribute('fill',(p.st.m[i>>3]>>(7-(i&7)))&1?'#FF453A':'#3A1C1C')}}),
+ a4988:svgP({name:'A4988 Step Sürücü',g:'Çıkış',d:'STEP · DIR · EN',w:84,h:60,pins:['STEP','DIR','EN'],pinXY:hdr(84,54,['EN','STEP','DIR','1A','1B','2A','2B']),
+   draw:()=>`<rect x="1" y="1" width="82" height="50" rx="3" fill="#5856D6"/><rect x="22" y="8" width="40" height="30" rx="2" fill="#AEAEB2"/>${[0,1,2,3,4,5].map(i=>`<rect x="24" y="${10+i*4.6}" width="36" height="2.2" fill="#8E8E93"/>`).join('')}`+hdrSvg(84,54,['EN','STEP','DIR','1A','1B','2A','2B'])}),
+ l298n:svgP({name:'L298N Motor Sürücü',g:'Çıkış',d:'2 motor · IN1–IN4 · ENA ENB',w:130,h:112,pins:['IN1','IN2','IN3','IN4','ENA','ENB'],
+   pinXY:[...hdr(40,6,['OUT1','OUT2']),...hdr(40,6,['OUT3','OUT4']).map(([n,x,y])=>[n,x+90,y]),...hdr(48,106,['12V','GND','5V'],{'12V':'vcc',GND:'gnd'}),...hdr(82,106,['ENA','IN1','IN2','IN3','IN4','ENB']).map(([n,x,y])=>[n,x+48,y])],
+   draw:()=>`<rect x="1" y="1" width="128" height="110" rx="4" fill="#C62828"/><rect x="45" y="14" width="40" height="46" rx="2" fill="#1C1C1E"/>${[0,1,2,3,4,5,6].map(i=>`<rect x="47" y="${16+i*6}" width="36" height="3" fill="#3A3A3C"/>`).join('')}
+     <rect x="6" y="1" width="28" height="14" fill="#007AFF"/><rect x="96" y="1" width="28" height="14" fill="#007AFF"/><text x="65" y="78" font-size="9" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">L298N</text>`+hdrSvg(40,6,['OUT1','OUT2'],0)+`<g transform="translate(90 0)">${hdrSvg(40,6,['OUT3','OUT4'],0)}</g>`+hdrSvg(48,106,['12V','GND','5V'])+`<g transform="translate(48 0)">${hdrSvg(82,106,['ENA','IN1','IN2','IN3','IN4','ENB'])}</g>`}),
+ speaker:svgP({name:'Hoparlör',g:'Çıkış',d:'tone() · 8 Ω',w:58,h:66,pins:['+'],gnd:['-'],pinXY:[['+',24.2,64],['-',33.8,64,'gnd']],
+   draw:()=>`${leg(24.2,50,64,'#FF3B30')}${leg(33.8,50,64,'#1C1C1E')}<circle cx="29" cy="27" r="26" fill="#2C2C2E"/><circle class="cone" cx="29" cy="27" r="17" fill="#48484A"/><circle cx="29" cy="27" r="6" fill="#636366"/>`,
+   up:(p,e)=>{const f=p.st.freq||0;Audio_.set(p.id,f);e.querySelector('.cone').setAttribute('r',f?17+Math.sin(performance.now()/30)*1.5:17)}}),
+ lamp:svgP({name:'Ampul',g:'Çıkış',d:'Akkor lamba · 2 uç',w:44,h:70,pinXY:[['1',17.2,68],['2',26.8,68]],
+   draw:()=>`${leg(17.2,52,68)}${leg(26.8,52,68)}<circle class="glow" cx="22" cy="22" r="20" fill="#FFD60A" opacity="0"/><circle class="bulb" cx="22" cy="22" r="16" fill="#E5E5EA" stroke="#AEAEB2"/><rect x="14" y="36" width="16" height="14" rx="2" fill="#AEAEB2"/><path d="M17 26l3-8 2 6 2-6 3 8" fill="none" stroke="#8E8E93" stroke-width="1.2"/>`,
+   up:(p,e)=>{const a=lvNet(p,'1'),b=lvNet(p,'2'),v=a!=null&&b!=null?Math.abs(a-b):0;e.querySelector('.glow').setAttribute('opacity',v*.7);e.querySelector('.bulb').setAttribute('fill',v>.05?'#FFF3B0':'#E5E5EA')}}),
+ fan:svgP({name:'Fan',g:'Çıkış',d:'DC fan · 2 uç',w:66,h:78,pinXY:[['+',28.2,76],['-',37.8,76]],st:{rot:0},up:motorUp('+','-',1440),
+   draw:()=>`${leg(28.2,62,76,'#FF3B30')}${leg(37.8,62,76,'#1C1C1E')}<rect x="2" y="2" width="62" height="62" rx="8" fill="#2C2C2E"/><circle cx="33" cy="33" r="27" fill="#1C1C1E"/><g class="rot" data-cx="33" data-cy="33">${[0,72,144,216,288].map(a=>`<path d="M33 33c4-14 14-18 18-14s-6 12-18 14z" fill="#636366" transform="rotate(${a} 33 33)"/>`).join('')}<circle cx="33" cy="33" r="6" fill="#8E8E93"/></g>`}),
+ pump:svgP({name:'Su Pompası',g:'Çıkış',d:'Mini DC pompa · 2 uç',w:56,h:84,pinXY:[['+',23.2,82],['-',32.8,82]],up:(p,e,dt)=>{motorUp('+','-',0)(p,e,dt);e.classList.toggle('flow',!!p.st.badge)},
+   draw:()=>`${leg(23.2,66,82,'#FF3B30')}${leg(32.8,66,82,'#1C1C1E')}<rect x="10" y="18" width="36" height="48" rx="6" fill="#F2F2F7" stroke="#AEAEB2"/><rect x="24" y="2" width="8" height="18" fill="#AEAEB2"/><g class="drops"><circle cx="28" cy="-2" r="2.5" fill="#0A84FF"/><circle cx="34" cy="-8" r="2" fill="#0A84FF"/><circle cx="22" cy="-10" r="2" fill="#0A84FF"/></g>`}),
+ hc05:svgP({name:'Bluetooth HC-05',g:'Diğer',d:'SoftwareSerial · telefon terminali',w:56,h:92,pins:['TXD','RXD'],pinXY:hdr(56,86,['VCC','GND','TXD','RXD'],{VCC:'vcc',GND:'gnd'}),st:{log:'',inq:''},ctrl:[{t:'term'}],
+   draw:()=>`<rect x="4" y="1" width="48" height="80" rx="3" fill="#1E5AA8"/><rect x="10" y="6" width="36" height="46" rx="2" fill="#2E7D32"/><path d="M14 12h28M14 18h28M14 24h28" stroke="#C7A86B" stroke-width="1.5"/><text x="28" y="66" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">HC-05</text>`+hdrSvg(56,86,['VCC','GND','TXD','RXD'])}),
+ btphone:svgP({name:'Bluetooth Telefon',g:'Diğer',d:'ESP32 BluetoothSerial terminali',w:56,h:104,pinXY:[],st:{log:'',inq:''},ctrl:[{t:'term'}],
+   draw:()=>`<rect x="2" y="2" width="52" height="100" rx="10" fill="#1C1C1E"/><rect x="6" y="12" width="44" height="78" rx="3" fill="#0A84FF"/><path d="M24 40l10 10-5 5V35l5 5-10 10" fill="none" stroke="#fff" stroke-width="2"/><rect x="22" y="6" width="12" height="2.5" rx="1" fill="#48484A"/>`}),
+ rc522:svgP({name:'RFID RC522',g:'Sensörler',d:'MFRC522 · kart okuyucu',w:84,h:104,pins:['SDA','RST'],fix:{MOSI:'mosi',MISO:'miso',SCK:'sck'},pinXY:hdr(84,98,['SDA','SCK','MOSI','MISO','GND','RST','3.3V'],{GND:'gnd','3.3V':'vcc'}),st:{card:null,newCard:false},ctrl:[{t:'cards'}],
+   draw:()=>`<rect x="1" y="1" width="82" height="92" rx="4" fill="#1E5AA8"/><rect x="10" y="8" width="64" height="56" rx="6" fill="none" stroke="#C7A86B" stroke-width="2.5"/><rect x="18" y="16" width="48" height="40" rx="4" fill="none" stroke="#C7A86B" stroke-width="2"/><text x="42" y="80" font-size="8" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">RC522</text>`+hdrSvg(84,98,['SDA','SCK','MOSI','MISO','GND','RST','3.3V'])}),
+ gps:svgP({name:'GPS NEO-6M',g:'Sensörler',d:'TinyGPS++ · konum',w:70,h:84,pins:['TX','RX'],pinXY:hdr(70,78,['VCC','RX','TX','GND'],{VCC:'vcc',GND:'gnd'}),st:{lat:39.9208,lng:32.8541,spd:0,sats:8},
+   ctrl:[{k:'lat',l:'Enlem',min:-90,max:90,step:.0001,u:'°'},{k:'lng',l:'Boylam',min:-180,max:180,step:.0001,u:'°'},{k:'spd',l:'Hız',min:0,max:150,u:' km/s'},{k:'sats',l:'Uydu',min:0,max:12}],
+   draw:()=>`<rect x="1" y="1" width="68" height="70" rx="4" fill="#1E5AA8"/><rect x="12" y="8" width="46" height="46" rx="3" fill="#C7A86B"/><rect x="18" y="14" width="34" height="34" rx="2" fill="#AEAEB2"/><text x="35" y="66" font-size="7" font-weight="700" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">NEO-6M</text>`+hdrSvg(70,78,['VCC','RX','TX','GND'])}),
+ multimeter:svgP({name:'Multimetre',g:'Diğer',d:'Gerilim ölçer · COM ve V',w:84,h:132,pinXY:[['COM',30.6,126],['V',59.4,126]],
+   draw:()=>`<rect x="2" y="2" width="80" height="128" rx="10" fill="#FFCC00"/><rect x="8" y="8" width="68" height="112" rx="6" fill="#2C2C2E"/><rect x="14" y="14" width="56" height="28" rx="3" fill="#B7C8A0"/><text class="rd" x="66" y="34" font-size="14" text-anchor="end" fill="#1C1C1E" font-family="Menlo,monospace">-.--</text>
+     <circle cx="42" cy="72" r="16" fill="#48484A"/><path d="M42 72L42 58" stroke="#fff" stroke-width="3" stroke-linecap="round"/><text x="42" y="98" font-size="7" text-anchor="middle" fill="#fff" font-family="-apple-system,sans-serif">V ⎓</text>
+     <circle cx="30.6" cy="114" r="5" fill="#1C1C1E" stroke="#8E8E93"/><circle cx="59.4" cy="114" r="5" fill="#FF3B30" stroke="#8E8E93"/>${leg(30.6,119,126,'#1C1C1E')}${leg(59.4,119,126,'#FF3B30')}`,
+   up:(p,e)=>{const a=netVolt(p.nodes.V),b=netVolt(p.nodes.COM),t=a!=null&&b!=null?(a-b).toFixed(2):'-.--';const el=e.querySelector('.rd');if(el.textContent!==t)el.textContent=t}}),
+ scope:svgP({name:'Osiloskop',g:'Diğer',d:'Tek kanal · CH1 ve GND',w:170,h:120,pinXY:[['GND',70.8,116],['CH1',99.6,116]],st:{buf:[]},
+   draw:()=>`<rect x="2" y="2" width="166" height="108" rx="8" fill="#3A3A3C"/><rect x="10" y="10" width="120" height="90" rx="3" fill="#0B1F12"/>${[1,2,3,4,5].map(i=>`<path d="M10 ${10+i*15}H130" stroke="#1F4A2C" stroke-width=".6"/>`).join('')}${[1,2,3,4,5,6,7].map(i=>`<path d="M${10+i*15} 10V100" stroke="#1F4A2C" stroke-width=".6"/>`).join('')}
+     <path class="tr" d="" fill="none" stroke="#30D158" stroke-width="1.5"/><text x="150" y="28" font-size="7" text-anchor="middle" fill="#fff" font-family="Menlo,monospace">2V/div</text><text class="vv" x="150" y="44" font-size="7" text-anchor="middle" fill="#30D158" font-family="Menlo,monospace">—</text>
+     <circle cx="70.8" cy="106" r="4" fill="#1C1C1E"/><circle cx="99.6" cy="106" r="4" fill="#FFCC00"/>${leg(70.8,110,116,'#1C1C1E')}${leg(99.6,110,116,'#FFCC00')}`,
+   up:(p,e)=>{const a=netVolt(p.nodes.CH1),b=netVolt(p.nodes.GND),v=a!=null&&b!=null?a-b:null,B=p.st.buf;B.push(v);if(B.length>120)B.shift();
+     e.querySelector('.tr').setAttribute('d',B.map((x,i)=>(i?'L':'M')+(130-B.length+i)+' '+(x==null?55:Math.max(10,Math.min(100,100-x*7.5)))).join(''));e.querySelector('.vv').textContent=v==null?'—':v.toFixed(1)+'V'}}),
+});
+/* ---------- wires (Tinkercad style): model, nets, drawing ---------- */
+Object.assign(S,{wires:[],selWire:null,draw:null,mouse:null,panX:0,panY:0,placing:null});
+const WIRE_COLORS=[['Yeşil','#34C759'],['Kırmızı','#FF3B30'],['Siyah','#1C1C1E'],['Mavi','#007AFF'],['Sarı','#FFCC00'],['Turuncu','#FF9500'],['Mor','#AF52DE'],['Beyaz','#E5E5EA'],['Gri','#8E8E93'],['Kahve','#A2845E']];
+const objOf=id=>id==='board'?BO:S.parts.find(p=>p.id==id);
+const boardName=n=>BO.e?BRD().pn(n):String(n);
+const boardNum=name=>{const x=BRD().pins.find(q=>boardName(q.n)==name);return x?x.n:null};
+const isPow=(r)=>{const o=objOf(r.p);if(!o)return null;
+  if(r.p==='board')return /GND/.test(r.n)?'gnd':/^(5V|3V3|3\.3V|VIN|VCC|IOREF)/.test(r.n)?'vcc':null;
+  if(!o.e)return null;const d=PARTS[o.type];if((d.gnd||[]).includes(r.n))return 'gnd';
+  const q=(o.e.pinInfo||[]).find(q=>q.name==r.n),s=q&&(q.signals||[]).find(s=>s.type=='power');return s?(s.signal=='GND'?'gnd':'vcc'):null};
+const defColor=(a,b)=>{const t=isPow(a)||isPow(b);return t=='gnd'?'#1C1C1E':t=='vcc'?'#FF3B30':'#34C759'};
+function refXY(r){const o=objOf(r.p);return o?pinXY(o,r.n):null}
+function pinNames(id,o){if(id==='board')return BO.e?(BO.e.pinInfo||[]).map(q=>q.name):[...BRD().pins.map(q=>String(q.n)),'3V3','5V','GND'];
+  return o.e?(o.e.pinInfo||[]).map(q=>q.name):PARTS[o.type].pins}
+
+function syncPins(){
+  const par=new Map(),f=x=>{if(!par.has(x))par.set(x,x);let r=x;while(par.get(r)!==r)r=par.get(r);par.set(x,r);return r},u=(a,b)=>par.set(f(a),f(b));
+  const key=r=>r.p+'|'+r.n;
+  S.wires.forEach(w=>u(key(w.a),key(w.b)));
+  S.parts.forEach(p=>{if(p.type=='resistor')u(p.id+'|1',p.id+'|2')});
+  const bbs=S.parts.filter(p=>PARTS[p.type].bb&&p.e);
+  for(const b of bbs){const G=PARTS[b.type].bb;for(let c=1;c<=G.cols;c++){for(const k of 'bcde')u(b.id+'|a'+c,b.id+'|'+k+c);for(const k of 'ghij')u(b.id+'|f'+c,b.id+'|'+k+c)}
+    if(G.rails)for(const k of ['tp','tn','bn','bp']){let fst=null;for(let c=1;c<=G.cols;c++)if(railCol(c)){const nd=b.id+'|'+k+c;if(fst)u(fst,nd);else fst=nd}}}
+  for(const p of S.parts){S.parts&&(p.nodes={});if(PARTS[p.type].bb)continue;for(const n of p.e||PARTS[p.type].custom?pinNames(p.id,p):[]){f(p.id+'|'+n);
+    if(!bbs.length||!p.e)continue;const q=pinXY(p,n);if(!q)continue;for(const b of bbs){const h=bbNear(b,q,4);if(h){u(p.id+'|'+n,b.id+'|'+h);break}}}}
+  const roots=new Map(),info=new Map(),I=r=>{if(!info.has(r))info.set(r,{gpio:null,vcc:0,gnd:0,tc:[],tp:[],rg:[],dr:[]});return info.get(r)};
+  for(const node of [...par.keys()]){const r=f(node),[id,n]=[node.slice(0,node.indexOf('|')),node.slice(node.indexOf('|')+1)];
+    if(id==='board'){const g=boardNum(n);if(g!=null){if(I(r).gpio==null)I(r).gpio=g}else if(/GND/.test(n))I(r).gnd=1;else if(/^(5V|3V3|3\.3V|VIN|VCC|IOREF)/.test(n))I(r).vcc=/^(5V|VIN|IOREF)/.test(n)?5:/3/.test(n)?3.3:(BRD().volt=='5V'?5:3.3)}
+    else{const p=S.parts.find(x=>x.id==id);if(p&&PARTS[p.type].pow){if(n=='+')I(r).vcc=PARTS[p.type].volts||5;if(n=='-')I(r).gnd=1}if(p&&p.type=='resistor')I(r).res=1}}
+  S.parts.forEach(p=>{for(const n of p.e||PARTS[p.type].custom?pinNames(p.id,p):[])p.nodes[n]=f(p.id+'|'+n)});
+  S.parts.filter(p=>PARTS[p.type].npn).forEach(t=>I(t.nodes.C).tc.push(t));S.parts.filter(p=>PARTS[p.type].pnp).forEach(t=>I(t.nodes.C).tp.push(t));S.parts.filter(p=>PARTS[p.type].reg).forEach(t=>I(t.nodes.OUT).rg.push(t));S.parts.filter(p=>p.type=='l298n').forEach(t=>['1','2','3','4'].forEach(x=>I(t.nodes['OUT'+x]).dr.push([t,x])));
+  S.netInfo=info;
+  for(const node of [...par.keys()])if(node.startsWith('board|')){const n=boardNum(node.slice(6));if(n!=null&&!roots.has(f(node)))roots.set(f(node),n)}
+  S.parts.forEach(p=>{const d=PARTS[p.type];p.pins={};[...d.pins,...Object.keys(d.fix||{})].forEach(k=>{const nd=p.id+'|'+k;p.pins[k]=par.has(nd)?(roots.get(f(nd))??null):null})});
+}
+function addWire(a,b,o={}){S.wires.push({a,b,pts:o.pts||[],c:o.c||defColor(a,b),curve:!!o.curve});syncPins();S.wDirty=true;save()}
+function dropWiresOf(id,pin){S.wires=S.wires.filter(w=>!((w.a.p==id&&(pin==null||w.a.n==pin))||(w.b.p==id&&(pin==null||w.b.n==pin))))}
+function autowire(p,explicit){
+  assign(p);if(explicit)Object.assign(p.pins,explicit);const pins={...p.pins};
+  dropWiresOf(p.id);
+  for(const k in pins)if(pins[k]!=null){const a={p:'board',n:boardName(pins[k])},b={p:p.id,n:k};S.wires.push({a,b,pts:[],c:'',curve:true})}
+  {const pw=powerPins(p),b=BRD();
+    if(pw.vcc)S.wires.push({a:{p:'board',n:b.vcc},b:{p:p.id,n:pw.vcc},pts:[],c:'#FF3B30',curve:true});
+    if(pw.gnd)S.wires.push({a:{p:'board',n:b.gnd},b:{p:p.id,n:pw.gnd},pts:[],c:'#1C1C1E',curve:true})}
+  let i=0;S.wires.forEach(w=>{if(!w.c)w.c=`var(${WCOL[(p.id+i++)%WCOL.length]})`});
+  syncPins();S.wDirty=true;
+}
+function bbNear(b,q,tol){let best=null,bd=tol;for(const h of b.e.pinInfo){const pt=pinXY(b,h.name);const d=Math.hypot(pt.x-q.x,pt.y-q.y);if(d<bd){bd=d;best=h.name}}return best}
+function snapToBB(p){if(!p.e||PARTS[p.type].bb)return;for(const b of S.parts.filter(x=>PARTS[x.type].bb&&x.e))for(const n of pinNames(p.id,p)){const q=pinXY(p,n),h=q&&bbNear(b,q,7);
+  if(h){const t=pinXY(b,h);p.x+=t.x-q.x;p.y+=t.y-q.y;place(p.el,p.x,p.y);return}}}
+const curvePath=(A,B)=>{const dx=Math.max(30,Math.abs(B.x-A.x)/2);return `M${A.x} ${A.y}C${A.x+dx} ${A.y} ${B.x-dx} ${B.y} ${B.x} ${B.y}`};
+function drawWires(){
+  BO.x=S.bx;BO.y=S.by;let h='',ph='',en='';
+  S.wires.forEach((w,i)=>{const A=refXY(w.a),B=refXY(w.b);if(!A||!B)return;
+    const d=w.curve&&!w.pts.length?curvePath(A,B):'M'+[A,...w.pts,B].map(q=>q.x+' '+q.y).join('L');
+    if(i===S.selWire)h+=`<path d="${d}" class="wsel"/>`;
+    h+=`<path d="${d}" class="w" style="stroke:${w.c}"/><path d="${d}" class="wh" data-w="${i}"/>`;
+    h+=`<circle class="jn" cx="${A.x}" cy="${A.y}" r="3.3" style="fill:${w.c}"/><circle class="jn" cx="${B.x}" cy="${B.y}" r="3.3" style="fill:${w.c}"/>`;
+    if(i===S.selWire)en+=`<circle class="wend" data-w="${i}" data-e="a" cx="${A.x}" cy="${A.y}" r="5.5"/><circle class="wend" data-w="${i}" data-e="b" cx="${B.x}" cy="${B.y}" r="5.5"/>`;
+    if(i===S.selWire)w.pts.forEach((q,j)=>h+=`<circle class="bend" data-w="${i}" data-b="${j}" cx="${q.x}" cy="${q.y}" r="4.5"/>`)});
+  for(const [id,o] of [['board',BO],...S.parts.map(p=>[p.id,p])])for(const n of pinNames(id,o)){const q=pinXY(o,n);
+    if(q)ph+=`<circle class="pin" data-p="${id}" data-n="${n}" cx="${q.x}" cy="${q.y}" r="3.6"/>`}
+  wires.innerHTML=`<g>${h}</g><path id="wprev"/><g>${ph}</g><g>${en}</g>`;S.wDirty=false;drawPreview();
+}
+function drawPreview(){const el=wires.querySelector('#wprev');if(!el)return;
+  if(!S.draw||!S.mouse){el.setAttribute('d','');return}
+  const A=refXY(S.draw.a);if(!A)return;el.setAttribute('d','M'+[A,...S.draw.pts,S.mouse].map(q=>q.x+' '+q.y).join('L'));el.style.stroke=S.draw.c}
+/* ---------- libraries for the new parts + electrical helpers ---------- */
+function netVolt(r,d=0){if(r==null||d>4)return null;const i=S.netInfo&&S.netInfo.get(r);if(!i)return null;const bv=BRD().volt=='5V'?5:3.3;
+  if(i.gpio!=null){const q=P(i.gpio);return q.mode=='OUT'?q.pwm*bv:(q.mode=='PU'?bv:null)}
+  if(i.vcc)return i.vcc;if(i.gnd)return 0;
+  const l=netLevel(r,d);if(l==null)return null;if(l===0)return 0;
+  for(const t of i.tp||[]){const e=netVolt(t.nodes.E,d+1);if(e)return e}
+  return (i.rg||[]).length?5:l*bv}
+PARTS.led.up=(p,e)=>{const a=lvNet(p,'A'),c=lvNet(p,'C');let v=a!=null&&c!=null?Math.max(0,a-c):0;
+  const I=S.netInfo||new Map(),ia=I.get(p.nodes&&p.nodes.A),ic=I.get(p.nodes&&p.nodes.C),res=(ia&&ia.res)||(ic&&ic.res);
+  if(v>0&&!res){const dv=(netVolt(p.nodes.A)||0)-(netVolt(p.nodes.C)||0);if(!(ia&&ia.gpio!=null)&&dv>3.2&&RT.running)p.st.burnt=true;else{p.st.badge='direnç yok';p.st.badgeErr=1}}
+  else if(!p.st.burnt){p.st.badge='';p.st.badgeErr=0}
+  if(p.st.burnt){v=0;p.st.badge='YANDI · direnç ekle';p.st.badgeErr=1}
+  e.value=v>0;e.brightness=v};
+
+/* serial-style links: HC-05, GPS, Bluetooth phone */
+function updTerm(p){if(S.sel===p.id){const el=$('#termLog');if(el){el.textContent=p.st.log||'Henüz veri yok.';el.scrollTop=el.scrollHeight}}}
+function nmea(p){const f=(v,dd)=>{const a=Math.abs(v),d=Math.floor(a),m=(a-d)*60;return String(d).padStart(dd,'0')+m.toFixed(4).padStart(7,'0')},hh=new Date().toISOString().slice(11,19).replace(/:/g,'');
+  return `$GPGGA,${hh},${f(p.st.lat,2)},${p.st.lat<0?'S':'N'},${f(p.st.lng,3)},${p.st.lng<0?'W':'E'},1,${String(p.st.sats|0).padStart(2,'0')},0.9,850.0,M,0,M,,*47\r\n`}
+class BTS{constructor(p){this.p=p||null;this.buf='';this.t=0}
+  _fill(){const p=this.p;if(!p)return;if(p.type=='gps'){const n=performance.now();if(n-this.t>1000){this.t=n;this.buf+=nmea(p)}}else if(p.st.inq){this.buf+=p.st.inq;p.st.inq=''}}
+  _out(s){const p=this.p;if(!p||p.type=='gps')return;p.st.log=(p.st.log+s).slice(-4000);updTerm(p)}
+  begin(){return true}end(){}listen(){return true}isListening(){return true}flush(){}setTimeout(){}hasClient(){return!!this.p}connected(){return!!this.p}
+  available(){this._fill();return this.buf.length}read(){this._fill();if(!this.buf)return -1;const c=this.buf[0];this.buf=this.buf.slice(1);return c}peek(){this._fill();return this.buf?this.buf[0]:-1}
+  readString(){this._fill();const s=this.buf;this.buf='';return s}
+  readStringUntil(c){this._fill();const i=this.buf.indexOf(c),s=i<0?this.buf:this.buf.slice(0,i);this.buf=i<0?'':this.buf.slice(i+1);return s}
+  parseInt(){this._fill();const m=this.buf.match(/-?\d+/);if(!m)return 0;this.buf=this.buf.slice(m.index+m[0].length);return+m[0]}
+  print(v,b){this._out(fmt(v,b));return 1}println(v,b){this._out((v===undefined?'':fmt(v,b))+'\n');return 1}
+  write(v){this._out(typeof v=='number'?String.fromCharCode(v):v);return 1}printf(f,...a){this._out(sprintf(f,a))}}
+function SoftwareSerial(rx){const p=S.parts.find(x=>!x._b&&((x.type=='hc05'&&x.pins.TXD==rx)||(x.type=='gps'&&x.pins.TX==rx)))||S.parts.find(x=>!x._b&&(x.type=='hc05'||x.type=='gps'));if(p)p._b=1;return new BTS(p)}
+function BluetoothSerial(){if(!BRD().bt)throw new Error(BRD().name+' kartında Bluetooth yok. ESP32 seç ya da HC-05 modülü kullan.');
+  const s=new BTS(bindPart(['btphone','hc05']));s.begin=n=>{if(s.p){s.p.st.log+=`[Bağlandı: ${n||'ESP32'}]\n`;updTerm(s.p)}return true};return s}
+class TinyGPSPlus{constructor(){this.p=bindPart('gps');this.n=0;const g=()=>this.p&&this.p.st,ok=()=>!!g()&&g().sats>=3,D=()=>new Date();
+  this.location={isValid:ok,isUpdated:ok,lat:()=>ok()?g().lat:0,lng:()=>ok()?g().lng:0,age:()=>0};this.satellites={value:()=>g()?g().sats|0:0,isValid:()=>!!g()};
+  this.speed={kmph:()=>g()?g().spd:0,mps:()=>g()?g().spd/3.6:0,knots:()=>g()?g().spd/1.852:0,isValid:ok};this.altitude={meters:()=>850,isValid:ok};
+  this.date={isValid:ok,year:()=>D().getUTCFullYear(),month:()=>D().getUTCMonth()+1,day:()=>D().getUTCDate()};
+  this.time={isValid:ok,hour:()=>D().getUTCHours(),minute:()=>D().getUTCMinutes(),second:()=>D().getUTCSeconds(),centisecond:()=>0};this.hdop={hdop:()=>.9,value:()=>90,isValid:ok}}
+  encode(c){this.n++;return c=='\n'}charsProcessed(){return this.n}}
+
+/* displays and readers */
+const DIG7=[0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71];
+class TM1637Display{constructor(clk){this.p=bindPart('tm1637','CLK',clk)}
+  _set(a,pos=0){if(!this.p)return;a.forEach((v,i)=>{if(pos+i<4)this.p.st.seg[pos+i]=v&255});this.p.st.dirty=true}
+  setBrightness(){}clear(){this._set([0,0,0,0])}setSegments(a,len=4,pos=0){this._set([...a].slice(0,len),pos)}encodeDigit(d){return DIG7[d&15]}
+  showNumberDecEx(num,dots=0,lz=false,len=4,pos=0){num=Math.trunc(num);const neg=num<0;let s=String(Math.abs(num));if(lz)s=s.padStart(len-(neg?1:0),'0');
+    let segs=[...s].map(ch=>DIG7[+ch]);if(neg)segs.unshift(0x40);segs=segs.slice(-len);while(segs.length<len)segs.unshift(0);
+    segs=segs.map((v,i)=>v|((dots<<i)&0x80));this._set(segs,pos)}
+  showNumberDec(num,lz=false,len=4,pos=0){this.showNumberDecEx(num,0,lz,len,pos)}
+  showNumberHexEx(num,dots=0,lz=false,len=4,pos=0){let s=(num>>>0).toString(16);if(lz)s=s.padStart(len,'0');const g=[...s].map(c=>DIG7[parseInt(c,16)]).slice(-len);while(g.length<len)g.unshift(0);this._set(g,pos)}}
+class LedControl{constructor(din){this.p=bindPart('max7219','DIN',din)}_d(){if(this.p)this.p.st.dirty=true}
+  shutdown(){}setIntensity(){}getDeviceCount(){return 1}clearDisplay(){if(this.p){this.p.st.m.fill(0);this._d()}}
+  setLed(a,r,c,s){if(!this.p)return;const m=this.p.st.m;m[r]=s?m[r]|(0x80>>c):m[r]&~(0x80>>c);this._d()}
+  setRow(a,r,v){if(this.p){this.p.st.m[r]=v&255;this._d()}}setColumn(a,c,v){for(let r=0;r<8;r++)this.setLed(a,r,c,(v>>(7-r))&1)}}
+class MFRC522{constructor(ss){this.p=bindPart('rc522','SDA',ss);this.uid={uidByte:[0,0,0,0],size:0,sak:8}}
+  PCD_Init(){}PCD_DumpVersionToSerial(){out('Firmware Version: 0x92 = v2.0\n')}PICC_HaltA(){}PCD_StopCrypto1(){}PICC_GetType(){return 4}PICC_GetTypeName(){return'MIFARE 1KB'}
+  PICC_IsNewCardPresent(){return!!(this.p&&this.p.st.newCard)}
+  PICC_ReadCardSerial(){const p=this.p;if(!p||!p.st.card)return false;this.uid={uidByte:[...p.st.card],size:p.st.card.length,sak:8};p.st.newCard=false;return true}}
+function stepEdge(n){for(const d of S.parts){if(d.type!='a4988'||d.pins.STEP!==n)continue;if(d.pins.EN!=null&&P(d.pins.EN).v)continue;
+  const st=S.parts.find(q=>q.type=='stepper'&&q.nodes&&['A-','A+','B+','B-'].some(k=>['1A','1B','2A','2B'].some(o=>d.nodes&&d.nodes[o]&&d.nodes[o]===q.nodes[k])))||S.parts.find(q=>q.type=='stepper');
+  if(st)st.st.angle=((st.st.angle+(d.pins.DIR!=null&&P(d.pins.DIR).v?1.8:-1.8))%360+360)%360}}
+const _mkP4=makeAPI;
+makeAPI=rid=>{const api=_mkP4(rid),dw=api.digitalWrite,tn=api.tone,nt=api.noTone;
+  api.digitalWrite=(n,v)=>{const pr=P(n).v;dw(n,v);if(pr!==P(n).v&&P(n).v)stepEdge(n)};
+  api.tone=(n,f,d)=>{tn(n,f,d);const z=partOn('speaker','+',n);if(z){z.st.freq=Math.round(f);if(d)setTimeout(()=>{if(z.st.freq==Math.round(f))z.st.freq=0},d)}};
+  api.noTone=n=>{nt(n);const z=partOn('speaker','+',n);if(z)z.st.freq=0};
+  return Object.assign(api,{SoftwareSerial,BluetoothSerial,TinyGPSPlus,TM1637Display,LedControl,MFRC522,SEG_A:1,SEG_B:2,SEG_C:4,SEG_D:8,SEG_E:16,SEG_F:32,SEG_G:64,SEG_DP:128,
+    Serial1:new BTS(S.parts.find(x=>x.type=='hc05')||S.parts.find(x=>x.type=='gps')),Serial2:new BTS(S.parts.find(x=>x.type=='gps')||S.parts.find(x=>x.type=='hc05'))})};
+
+/* popover extras: phone terminal and RFID cards */
+const CARDS=[['Mavi kart',[0xA3,0xF1,0x22,0x9C]],['Anahtarlık',[0x5B,0x0E,0x77,0xD4]],['Öğrenci kartı',[0x04,0x7A,0x3B,0x91]]];
+const hex=a=>a.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+const escH=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const termHtml=p=>`<pre class="btterm" id="termLog">${escH(p.st.log||'Henüz veri yok.')}</pre><form class="termin" id="termForm"><input id="termIn" placeholder="Telefondan gönder" aria-label="Telefondan gönder"><button class="btn small">Gönder</button></form>`;
+const cardsHtml=p=>`<p class="sub" style="margin:0">Kartı okuyucuya okut:</p><div class="cards">${CARDS.map(([n,u],i)=>`<button class="cardbtn" data-i="${i}"><b>${n}</b><span class="mono">${hex(u)}</span></button>`).join('')}</div>`;
+function bindPopExtra(p){
+  const f=$('#termForm');if(f)f.addEventListener('submit',e=>{e.preventDefault();const i=$('#termIn');if(!i.value)return;p.st.inq+=i.value+'\n';p.st.log=(p.st.log+'> '+i.value+'\n').slice(-4000);i.value='';updTerm(p)});
+  const l=$('#termLog');if(l)l.scrollTop=l.scrollHeight;
+  pop.querySelectorAll('.cardbtn').forEach(b=>b.addEventListener('click',()=>{p.st.card=CARDS[+b.dataset.i][1];p.st.newCard=true;pop.querySelectorAll('.cardbtn').forEach(x=>x.classList.toggle('on',x===b))}));
+}
+/* ---------- Arduino C++ → JS transpiler ---------- */
+Object.assign(String.prototype,{toInt(){return parseInt(this)||0},toFloat(){return parseFloat(this)||0},equals(o){return this==o},
+  equalsIgnoreCase(o){return this.toLowerCase()==String(o).toLowerCase()},c_str(){return String(this)}});
+const TYPES='unsigned\\s+long\\s+long|unsigned\\s+long|unsigned\\s+int|unsigned\\s+char|unsigned\\s+short|unsigned|long\\s+long|long\\s+int|long|short|int|float|double|bool|boolean|byte|char|String|word|size_t|auto|DateTime|File|u?int(?:8|16|32|64)_t';
+const ITYPES='unsigned\\s+long|unsigned\\s+int|unsigned|long|int|short|byte|size_t|word|u?int(?:8|16|32)_t';
+const LIB={Servo:'Servo',LiquidCrystal_I2C:'LCD',LiquidCrystal:'LCD',Adafruit_SSD1306:'OLED',TFT_eSPI:'TFT',Adafruit_ILI9341:'TFT',Adafruit_NeoPixel:'NeoPixel',DHT:'DHT',Stepper:'Stepper',Keypad:'Keypad',RTC_DS1307:'RTC',RTC_DS3231:'RTC',RTC_PCF8523:'RTC',HX711:'HX711',Adafruit_MPU6050:'MPU',IRrecv:'IRrecv',Adafruit_Microbit_Matrix:'MBMatrix',Adafruit_Microbit:'MBObj',SoftwareSerial:'SoftwareSerial',BluetoothSerial:'BluetoothSerial',TM1637Display:'TM1637Display',LedControl:'LedControl',MFRC522:'MFRC522',TinyGPSPlus:'TinyGPSPlus'};
+function params(a){a=a.trim();if(!a||a=='void')return '';
+  return a.split(',').map(x=>{const m=x.replace(/\[.*?\]/g,'').replace(/[*&]/g,' ').match(/(\w+)\s*(=.*)?$/);return m?m[1]+(m[2]||''):''}).join(', ')}
+function addYields(s){let o='',i=0,m;const re=/\b(while|for)\s*\(/g;
+  while((m=re.exec(s))){let j=m.index+m[0].length,d=1;while(j<s.length&&d){if(s[j]=='(')d++;else if(s[j]==')')d--;j++}
+    let k=j;while(/\s/.test(s[k]))k++;
+    if(s[k]=='{'){o+=s.slice(i,k+1)+' await __y();';i=k+1}
+    else if(s[k]==';'&&!(m[1]=='while'&&/\}\s*$/.test(s.slice(0,m.index)))){o+=s.slice(i,k)+'{ await __y(); }';i=k+1}
+    re.lastIndex=j}
+  return (o+s.slice(i)).replace(/\bdo\s*\{/g,'do { await __y();')}
+function transpile(src){
+  let s=src.replace(/\r/g,'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:"'\\])\/\/.*$/gm,'$1');
+  s=s.replace(/^\s*#include.*$/gm,'').replace(/^\s*#define\s+(\w+)\s+(.+)$/gm,'const $1 = $2;').replace(/^\s*#\w+.*$/gm,'');
+  s=s.replace(/\bB([01]{1,8})\b/g,'0b$1');
+  s=s.replace(/(^|[^\w.%])(\d+(?:\.\d+)?)(?:UL|ul|LL|L|l|U|u|f|F)\b/g,'$1$2');
+  s=s.replace(new RegExp(`\\b(${Object.keys(LIB).join('|')})\\s+(\\w+)\\s*(?:\\(([^;]*)\\))?\\s*(?:=\\s*\\w+\\s*\\(([^;]*)\\))?\\s*;`,'g'),
+    (m,t,n,a,b)=>`let ${n} = new ${LIB[t]}(${(a||b||'').replace(/&(?=\w)/g,'')});`);
+  s=s.replace(/\b\w+::\w+\s+(\w+)\s*=/g,'let $1 =');
+  s=s.replace(/\b(\w+)::(\w+)/g,(m,a,b)=>(LIB[a]||a)+'.'+b);
+  s=s.replace(/\bsensors_event_t\s+([\w\s,]+);/g,(m,l)=>'let '+l.split(',').map(v=>v.trim()+' = {}').join(', ')+';').replace(/\bdecode_results\s+(\w+)\s*;/g,'let $1 = {};');
+  s=s.replace(/([(,]\s*)&(?=[A-Za-z_])/g,'$1');
+  const fns=new Set();
+  s=s.replace(new RegExp(`^[ \\t]*(?:static\\s+|inline\\s+|const\\s+)*(?:void|${TYPES})\\s*[*&]?\\s+(\\w+)\\s*\\(([^)]*)\\)\\s*\\{`,'gm'),(m,n,a)=>{fns.add(n);return `async function __F_${n}(${params(a)}) {`});
+  s=s.replace(new RegExp(`^[ \\t]*(?:void|${TYPES})\\s*[*&]?\\s+\\w+\\s*\\([^)]*\\)\\s*;`,'gm'),'');
+  for(const n of fns)s=s.replace(new RegExp(`(^|[^\\w.])${n}\\s*\\(`,'g'),`$1await ${n}(`);
+  s=s.replace(/(^|[^\w.])(\w+(?:\.matrix)?)\.(step|scrollText)\(/g,'$1await $2.$3(').replace(/__F_(\w+)/g,'$1').replace(/(^|[^\w.])(delay|delayMicroseconds)\s*\(/g,'$1await $2(');
+  s=s.replace(/\((?:unsigned\s+)?(?:int|long|byte|short|u?int(?:8|16|32)_t)\)\s*(\(|[\w.]+(?:\([^()]*\))?)/g,(m,o)=>o=='('?'Math.trunc(':`Math.trunc(${o})`).replace(/\((?:float|double)\)\s*/g,'');
+  s=s.replace(/\bString\s+(\w+)\s*;/g,'String $1 = "";');
+  const ints=new Set();
+  s=s.replace(new RegExp(`\\b(const\\s+|static\\s+|volatile\\s+)*(?:${ITYPES})\\s+(\\w+)\\s*=\\s*([^;,{]+);`,'g'),(m,q,n,e)=>{ints.add(n);return `${/const/.test(m)?'const':'let'} ${n} = __i(${e});`});
+  s=s.replace(new RegExp(`\\b(?:const\\s+|static\\s+|volatile\\s+)*(?:${TYPES})\\s*[*&]?\\s+(?=[A-Za-z_])`,'g'),m=>/const/.test(m)?'const ':'let ');
+  for(const n of ints)s=s.replace(new RegExp(`(^|[;{}(\\s])${n}\\s*=\\s*([^;=][^;]*);`,'g'),`$1${n} = __i($2);`)
+    .replace(new RegExp(`(^|[;{}\\s])${n}\\s*/=\\s*([^;]+);`,'g'),`$1${n} = __i(${n} / ($2));`);
+  s=s.replace(/\b(let|const)\s+(\w+)\s*\[\s*\d*\s*\]\s*=\s*(".*?")\s*;/g,'$1 $2 = $3;');
+  s=s.replace(/\b(let|const)\s+(\w+)\s*((?:\[[^\]]*\])+)\s*=\s*\{([^;]*)\}\s*;/g,(m,k,n,d,b)=>`${k} ${n} = [${b.replace(/\{/g,'[').replace(/\}/g,']')}];`);
+  s=s.replace(/\b(let|const)\s+(\w+)\s*\[([^\]]+)\](?:\s*\[([^\]]+)\])?\s*;/g,(m,k,n,a,b)=>b?`${k} ${n} = Array.from({length:${a}},()=>new Array(${b}).fill(0));`:`${k} ${n} = new Array(${a}).fill(0);`);
+  s=s.replace(/\blet\s+([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*;/g,(m,l)=>'let '+l.split(',').map(v=>v.trim()+' = 0').join(', ')+';');
+  s=s.replace(/\.length\(\)/g,'.length').replace(/(\w+)\.(trim|toUpperCase|toLowerCase)\(\)\s*;/g,'$1 = $1.$2();')
+     .replace(/(\w+)\.replace\(([^;]*)\)\s*;/g,'$1 = $1.replaceAll($2);').replace(/\bsprintf\(\s*(\w+)\s*,/g,'$1 = sprintf($1,');
+  return addYields(s)+'\n;return {setup:typeof setup=="function"?setup:null,loop:typeof loop=="function"?loop:null};';
+}
+
+/* ---------- run control ---------- */
+const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
+let clockT=null,intT=null;
+function setRunUI(on,state){
+  const b=$('#runBtn');b.classList.toggle('stop',on);
+  b.innerHTML=on?'<svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.5"/></svg><span>Durdur</span>':'<svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg><span>Çalıştır</span>';
+  $('#status').className='status'+(on?' on':state=='err'?' err':'');
+  $('#statusText').textContent=on?'Çalışıyor':state=='err'?'Hata':'Durdu';
+}
+function stopSim(state){
+  RT.id++;RT.running=false;clearInterval(clockT);clearInterval(intT);Audio_.stopAll();
+  S.pins={};S.mb.px.fill(0);S.parts.forEach(p=>{p.st.freq=0});$('#wifiChip').hidden=true;setRunUI(false,state);
+}
+async function runSim(){
+  stopSim();Audio_.init();
+  const rid=++RT.id;RT.running=true;RT.t0=performance.now();RT.inBuf='';
+  S.parts.forEach(p=>{p._b=0;Object.assign(p.st,{freq:0,lines:[],bl:true,px:[],view:null,rot:0,dirty:true});if(p.type=='servo')p.st.angle=90;Object.assign(p.st,{burnt:false,badge:'',badgeErr:0});if('q' in p.st)p.st.q=[]});
+  RT.out='';$('#serialOut').textContent='';plotReset();S.errLine=null;updGutter();$('#baud').textContent='—';setRunUI(true);
+  clockT=setInterval(()=>$('#clock').textContent=((performance.now()-RT.t0)/1000).toFixed(1)+' sn',100);
+  const api=makeAPI(rid);let fn;
+  const G=new Proxy(api,{has:(o,k)=>k in o||(typeof k=='string'&&/^[A-Z_][A-Z0-9_]*$/.test(k)&&!(k in globalThis)),get:(o,k)=>k===Symbol.unscopables?undefined:(k in o?o[k]:0)});
+  const sl=semiLint($('#code').value);if(sl){out(`Satır ${sl}: satırın sonunda ';' eksik.\n`,'e');stopSim('err');markErr(sl);return}
+  const js=transpile($('#code').value);try{fn=new AsyncFunction('__G','with(__G){'+js+'}')}
+  catch(e){const ln=synLine(js);out(`${ln?'Satır '+ln+': ':''}Derleme hatası: ${trErr(e.message)}\nBu satır desteklenmeyen bir C++ yazımı içeriyor olabilir.\n`,'e');stopSim('err');markErr(ln);return}
+  intT=setInterval(()=>api.__ints.forEach(it=>{const v=api.__readD(it.n);if(v!=it.last){const ok=it.mode==1||(it.mode==3&&v)||(it.mode==2&&!v);it.last=v;if(ok)Promise.resolve(it.fn()).catch(()=>{})}}),4);
+  try{const {setup,loop}=await fn(G);
+    if(setup)await setup();
+    while(rid===RT.id&&loop){await loop();await sleep(0)}
+  }catch(e){if(e!==STOP){flushOut();const ln=errLine(e);out(`\n${ln?'Satır '+ln+': ':''}Hata: ${trErr(e.message)}\n`,'e');stopSim('err');markErr(ln)}}
+}
+/* ---------- example projects ---------- */
+const EX={
+microbit:{name:'micro:bit · butonlar + LED ekran',board:'microbit',parts:[],code:`#include <Adafruit_Microbit.h>
+
+Adafruit_Microbit_Matrix microbit;
+const uint8_t kalp[] = {B01010, B11111, B11111, B01110, B00100};
+int sayac = 0;
+
+void setup() {
+  pinMode(PIN_BUTTON_A, INPUT);
+  pinMode(PIN_BUTTON_B, INPUT);
+  microbit.begin();
+  microbit.show(kalp);
+}
+
+void loop() {
+  if (digitalRead(PIN_BUTTON_A) == LOW) {
+    sayac++;
+    microbit.print(sayac);
+    delay(300);
+  }
+  if (digitalRead(PIN_BUTTON_B) == LOW) {
+    microbit.scrollText("MERHABA");
+    microbit.show(kalp);
+  }
+  delay(20);
+}`},
+weather:{name:'ESP32 hava istasyonu · OLED + DHT22 + Wi-Fi',board:'esp32',parts:[['dht',{SDA:4}],['oled']],code:`#include <WiFi.h>
+#include <Adafruit_SSD1306.h>
+#include <DHT.h>
+
+Adafruit_SSD1306 ekran(128, 64, &Wire, -1);
+DHT dht(4, DHT22);
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  ekran.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  WiFi.begin("EvAgi", "sifre123");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(300);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
+  ekran.clearDisplay();
+  ekran.setTextColor(SSD1306_WHITE);
+  ekran.setTextSize(1);
+  ekran.setCursor(0, 0);
+  ekran.print("Hava Istasyonu");
+  ekran.drawLine(0, 10, 127, 10, SSD1306_WHITE);
+  ekran.setTextSize(2);
+  ekran.setCursor(0, 18);
+  ekran.print(t, 1);
+  ekran.print(" C");
+  ekran.setCursor(0, 42);
+  ekran.print("%");
+  ekran.print(h, 0);
+  ekran.drawRect(110, 14, 14, 48, SSD1306_WHITE);
+  ekran.fillRect(112, 60 - h * 0.44, 10, h * 0.44, SSD1306_WHITE);
+  ekran.display();
+  Serial.printf("Sicaklik: %.1f C  Nem: %.0f%%\\n", t, h);
+  delay(1000);
+}`},
+park:{name:'Park sensörü · HC-SR04 + buzzer + LCD',board:'uno',parts:[['sonar',{TRIG:9,ECHO:10}],['buzzer',{'1':8}],['led',{A:7}],['lcd']],code:`#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+const int TRIG = 9, ECHO = 10, BUZZER = 8, LED = 7;
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(LED, OUTPUT);
+  lcd.init();
+  lcd.backlight();
+  lcd.print("Park sensoru");
+}
+
+long mesafeOlc() {
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  long sure = pulseIn(ECHO, HIGH);
+  return sure * 0.034 / 2;
+}
+
+void loop() {
+  long cm = mesafeOlc();
+  lcd.setCursor(0, 1);
+  lcd.print("Mesafe: ");
+  lcd.print(cm);
+  lcd.print(" cm   ");
+  if (cm < 30) {
+    tone(BUZZER, 1800, 60);
+    digitalWrite(LED, HIGH);
+    delay(map(cm, 2, 30, 60, 400));
+    digitalWrite(LED, LOW);
+  } else {
+    noTone(BUZZER);
+    delay(200);
+  }
+}`},
+car:{name:'Otonom araç · engelden kaçan robot',board:'uno',parts:[['sonar',{TRIG:2,ECHO:3}],['servo',{PWM:9}],['motor',{IN1:7,IN2:8,ENA:5}],['motor',{IN1:11,IN2:12,ENA:6}]],code:`#include <Servo.h>
+
+Servo kafa;
+const int TRIG = 2, ECHO = 3;
+const int SOL1 = 7, SOL2 = 8, SOL_HIZ = 5;
+const int SAG1 = 11, SAG2 = 12, SAG_HIZ = 6;
+
+void motor(int a1, int a2, int en, int hiz) {
+  digitalWrite(a1, hiz > 0 ? HIGH : LOW);
+  digitalWrite(a2, hiz < 0 ? HIGH : LOW);
+  analogWrite(en, abs(hiz));
+}
+
+void sur(int sol, int sag) {
+  motor(SOL1, SOL2, SOL_HIZ, sol);
+  motor(SAG1, SAG2, SAG_HIZ, sag);
+}
+
+int mesafe() {
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  return pulseIn(ECHO, HIGH) / 58;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(TRIG, OUTPUT);
+  kafa.attach(9);
+  kafa.write(90);
+}
+
+void loop() {
+  int d = mesafe();
+  if (d > 30) {
+    sur(200, 200);
+    delay(100);
+    return;
+  }
+  Serial.print("Engel: ");
+  Serial.print(d);
+  Serial.println(" cm, etrafa bakiyorum");
+  sur(0, 0);
+  kafa.write(20);
+  delay(400);
+  int sag = mesafe();
+  kafa.write(160);
+  delay(400);
+  int sol = mesafe();
+  kafa.write(90);
+  delay(300);
+  Serial.println(sol > sag ? "Sola donuyorum" : "Saga donuyorum");
+  if (sol > sag) sur(-180, 180); else sur(180, -180);
+  delay(600);
+}`},
+lock:{name:'Şifreli kilit · tuş takımı + LCD',board:'uno',parts:[['keypad',{R1:9,R2:8,R3:7,R4:6,C1:5,C2:4,C3:3,C4:2}],['lcd'],['led',{A:10},{color:'green'}]],code:`#include <Keypad.h>
+#include <LiquidCrystal_I2C.h>
+
+const byte ROWS = 4, COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+byte rowPins[ROWS] = {9, 8, 7, 6};
+byte colPins[COLS] = {5, 4, 3, 2};
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+String sifre = "1234";
+String girilen = "";
+
+void setup() {
+  pinMode(10, OUTPUT);
+  lcd.init();
+  lcd.backlight();
+  lcd.print("Sifre (# onay):");
+}
+
+void loop() {
+  char tus = keypad.getKey();
+  if (tus) {
+    if (tus == '#') {
+      lcd.clear();
+      if (girilen == sifre) {
+        lcd.print("Kapi acildi");
+        digitalWrite(10, HIGH);
+      } else {
+        lcd.print("Yanlis sifre");
+        digitalWrite(10, LOW);
+      }
+      girilen = "";
+      delay(1500);
+      lcd.clear();
+      lcd.print("Sifre (# onay):");
+    } else {
+      girilen += tus;
+      lcd.setCursor(0, 1);
+      for (int i = 0; i < girilen.length(); i++) lcd.print("*");
+    }
+  }
+}`},
+clock:{name:'Masa saati · DS1307 + LCD 20×4 + DHT22',board:'uno',parts:[['rtc'],['lcd4'],['dht',{SDA:2}]],code:`#include <RTClib.h>
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+RTC_DS1307 rtc;
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+DHT dht(2, DHT22);
+const char* gunler[] = {"Pazar", "Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi"};
+
+void setup() {
+  rtc.begin();
+  dht.begin();
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+  DateTime now = rtc.now();
+  char buf[21];
+  sprintf(buf, "%02d:%02d:%02d", now.hour(), now.minute(), now.second());
+  lcd.setCursor(6, 0);
+  lcd.print(buf);
+  sprintf(buf, "%02d.%02d.%04d", now.day(), now.month(), now.year());
+  lcd.setCursor(5, 1);
+  lcd.print(buf);
+  lcd.setCursor(0, 2);
+  lcd.print(gunler[now.dayOfTheWeek()]);
+  lcd.print("          ");
+  lcd.setCursor(0, 3);
+  lcd.print(dht.readTemperature(), 1);
+  lcd.print(" C  %");
+  lcd.print(dht.readHumidity(), 0);
+  lcd.print(" nem ");
+  delay(500);
+}`},
+stepper:{name:'Enkoder ile step motor',board:'uno',parts:[['encoder',{CLK:2,DT:3,SW:4}],['stepper',{'A-':8,'A+':9,'B+':10,'B-':11}]],code:`#include <Stepper.h>
+
+const int CLK = 2, DT = 3, SW = 4;
+Stepper motor(200, 8, 9, 10, 11);
+int sonCLK;
+long konum = 0;
+
+void setup() {
+  pinMode(SW, INPUT_PULLUP);
+  motor.setSpeed(60);
+  Serial.begin(9600);
+  sonCLK = digitalRead(CLK);
+}
+
+void loop() {
+  int clk = digitalRead(CLK);
+  if (clk != sonCLK && clk == LOW) {
+    int yon = digitalRead(DT) != clk ? 1 : -1;
+    konum += yon;
+    motor.step(yon * 10);
+    Serial.print("Konum: ");
+    Serial.println(konum);
+  }
+  sonCLK = clk;
+  if (digitalRead(SW) == LOW) {
+    motor.step(-konum * 10);
+    konum = 0;
+    Serial.println("Sifirlandi");
+    delay(300);
+  }
+}`},
+ir:{name:'IR kumanda ile RGB LED',board:'uno',parts:[['irrecv',{DAT:2}],['irremote'],['rgb',{R:9,G:10,B:11}]],code:`#include <IRremote.h>
+
+const int R = 9, G = 10, B = 11;
+
+void renk(int r, int g, int b) {
+  analogWrite(R, r);
+  analogWrite(G, g);
+  analogWrite(B, b);
+}
+
+void setup() {
+  Serial.begin(9600);
+  IrReceiver.begin(2, ENABLE_LED_FEEDBACK);
+  Serial.println("Kumandada 1, 2, 3 veya POWER tusuna bas");
+}
+
+void loop() {
+  if (IrReceiver.decode()) {
+    int kod = IrReceiver.decodedIRData.command;
+    Serial.print("Kod: ");
+    Serial.println(kod);
+    switch (kod) {
+      case 48: renk(255, 0, 0); break;
+      case 24: renk(0, 255, 0); break;
+      case 122: renk(0, 0, 255); break;
+      case 162: renk(0, 0, 0); break;
+      default: renk(random(256), random(256), random(256));
+    }
+    IrReceiver.resume();
+  }
+}`},
+tft:{name:'ESP32-S3 TFT ekran · tema + saat',board:'s3',parts:[['tft',{CS:10,'D/C':14},null,270],['button',{'1.l':4}]],code:`#include <TFT_eSPI.h>
+
+TFT_eSPI tft = TFT_eSPI();
+const int BUTON = 4;
+int tema = 0;
+uint16_t arka[] = {TFT_BLACK, TFT_NAVY, 0x2104};
+uint16_t vurgu[] = {TFT_ORANGE, TFT_CYAN, TFT_GREEN};
+
+void ciz() {
+  tft.fillScreen(arka[tema]);
+  tft.fillRoundRect(10, 10, 300, 56, 10, vurgu[tema]);
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextColor(arka[tema]);
+  tft.setTextSize(3);
+  tft.drawString("AKILLI HESAP", 160, 38);
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_LIGHTGREY);
+  tft.drawString("Butona bas: tema", 160, 210);
+}
+
+void setup() {
+  pinMode(BUTON, INPUT_PULLUP);
+  tft.init();
+  tft.setRotation(1);
+  ciz();
+}
+
+void loop() {
+  if (digitalRead(BUTON) == LOW) {
+    tema = (tema + 1) % 3;
+    ciz();
+    delay(250);
+  }
+  unsigned long s = millis() / 1000;
+  char buf[12];
+  sprintf(buf, "%02d:%02d:%02d", s / 3600, (s / 60) % 60, s % 60);
+  tft.setTextColor(TFT_WHITE, arka[tema]);
+  tft.setTextSize(6);
+  tft.drawString(buf, 160, 135);
+  delay(100);
+}`},
+matrix:{name:'8×8 NeoPixel matris animasyonu',board:'esp32',parts:[['matrix',{DIN:13}]],code:`#include <Adafruit_NeoPixel.h>
+
+Adafruit_NeoPixel m(64, 13, NEO_GRB + NEO_KHZ800);
+int t = 0;
+
+void setup() {
+  m.begin();
+  m.setBrightness(90);
+}
+
+void loop() {
+  for (int y = 0; y < 8; y++) {
+    for (int x = 0; x < 8; x++) {
+      float d = sqrt(sq(x - 3.5) + sq(y - 3.5));
+      long ton = (long)(d * 6000 - t * 900) & 0xFFFF;
+      m.setPixelColor(y * 8 + x, m.ColorHSV(ton));
+    }
+  }
+  m.show();
+  t++;
+  delay(40);
+}`},
+neo:{name:'NeoPixel halka · ESP32-S3 + pot',board:'s3',parts:[['ring',{DIN:5},{pixels:12}],['pot',{SIG:1}]],code:`#include <Adafruit_NeoPixel.h>
+#define PIN 5
+#define ADET 12
+
+Adafruit_NeoPixel halka(ADET, PIN, NEO_GRB + NEO_KHZ800);
+long ton = 0;
+
+void setup() {
+  halka.begin();
+}
+
+void loop() {
+  int pot = analogRead(1);
+  halka.setBrightness(map(pot, 0, 4095, 20, 255));
+  for (int i = 0; i < ADET; i++) {
+    long renk = ton + i * 65536L / ADET;
+    halka.setPixelColor(i, halka.ColorHSV(renk));
+  }
+  halka.show();
+  ton += map(pot, 0, 4095, 100, 3000);
+  delay(30);
+}`},
+sd:{name:'SD karta sıcaklık kaydı · NTC',board:'uno',parts:[['sd',{CS:10}],['ntc',{OUT:14}]],code:`#include <SD.h>
+
+const float BETA = 3950;
+
+void setup() {
+  Serial.begin(9600);
+  if (!SD.begin(10)) {
+    Serial.println("SD kart bulunamadi");
+    while (true);
+  }
+  Serial.println("SD kart hazir, olcum.txt dosyasina yaziliyor");
+}
+
+void loop() {
+  int a = analogRead(A0);
+  float c = 1 / (log(1 / (1023. / a - 1)) / BETA + 1.0 / 298.15) - 273.15;
+  unsigned long sn = millis() / 1000;
+  File dosya = SD.open("olcum.txt", FILE_WRITE);
+  if (dosya) {
+    dosya.print(sn);
+    dosya.print(" sn: ");
+    dosya.println(c, 1);
+    dosya.close();
+  }
+  Serial.println(c, 1);
+  delay(1000);
+}`},
+mpu:{name:'MPU6050 eğim ölçer',board:'esp32',parts:[['mpu']],code:`#include <Adafruit_MPU6050.h>
+
+Adafruit_MPU6050 mpu;
+
+void setup() {
+  Serial.begin(115200);
+  if (!mpu.begin()) {
+    Serial.println("MPU6050 bulunamadi");
+    while (1) delay(10);
+  }
+  Serial.println("Sensoru sec, kaydiricilarla egimi degistir");
+}
+
+void loop() {
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float egimX = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI;
+  float egimY = atan2(-a.acceleration.x, a.acceleration.z) * 180 / PI;
+  Serial.printf("Egim X: %.1f  Y: %.1f  Sicaklik: %.1f C\\n", egimX, egimY, temp.temperature);
+  delay(400);
+}`},
+seg:{name:'7 segment sayaç',board:'uno',parts:[['seg7',{A:2,B:3,C:4,D:5,E:6,F:7,G:8,DP:9}]],code:`const int seg[] = {2, 3, 4, 5, 6, 7, 8};
+const byte rakam[10][7] = {
+  {1,1,1,1,1,1,0}, {0,1,1,0,0,0,0}, {1,1,0,1,1,0,1}, {1,1,1,1,0,0,1}, {0,1,1,0,0,1,1},
+  {1,0,1,1,0,1,1}, {1,0,1,1,1,1,1}, {1,1,1,0,0,0,0}, {1,1,1,1,1,1,1}, {1,1,1,1,0,1,1}
+};
+
+void goster(int n) {
+  for (int i = 0; i < 7; i++) digitalWrite(seg[i], rakam[n][i]);
+}
+
+void setup() {
+  for (int i = 0; i < 7; i++) pinMode(seg[i], OUTPUT);
+}
+
+void loop() {
+  for (int n = 0; n < 10; n++) {
+    goster(n);
+    delay(700);
+  }
+}`},
+button:{name:'Buton ile LED · sayaç',board:'uno',parts:[['button',{'1.l':2}],['led',{A:9}]],code:`const int BUTON = 2;
+const int LED = 9;
+int sayac = 0;
+bool onceki = HIGH;
+
+void setup() {
+  pinMode(BUTON, INPUT_PULLUP);
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  bool durum = digitalRead(BUTON);
+  if (durum == LOW && onceki == HIGH) {
+    sayac++;
+    Serial.print("Basma sayisi: ");
+    Serial.println(sayac);
+  }
+  onceki = durum;
+  digitalWrite(LED, durum == LOW ? HIGH : LOW);
+  delay(10);
+}`},
+servo:{name:'Potansiyometre ile servo',board:'uno',parts:[['pot',{SIG:14}],['servo',{PWM:9}]],code:`#include <Servo.h>
+Servo s;
+
+void setup() {
+  s.attach(9);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int deger = analogRead(A0);
+  int aci = map(deger, 0, 1023, 0, 180);
+  s.write(aci);
+  Serial.println(aci);
+  delay(20);
+}`},
+blink:{name:'Blink',board:'uno',parts:[['led',{A:13}]],code:`void setup() {
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+  delay(500);
+}`},
+};
+/* ---------- block coding (Blockly, Apache-2.0) → Arduino C++ ---------- */
+const HUE={mb:'#30B0C7',out:'#007AFF',in:'#30B0C7',ctl:'#FF9500',math:'#34C759',logic:'#5856D6',var:'#FF2D55',txt:'#AF52DE'};
+const HL=[['YÜKSEK','HIGH'],['DÜŞÜK','LOW']];
+const pinOpts=an=>function(){const b=BRD(),l=b.pins.filter(p=>!an||b.analog.has(p.n)).map(p=>[p.l,String(p.n)]);return l.length?l:[['—','0']]};
+function mk(type,colour,parts,o={}){
+  Blockly.Blocks[type]={init(){
+    let inp=null;const dum=()=>inp||(inp=this.appendDummyInput());
+    for(const p of parts){
+      if(typeof p=='string'){dum().appendField(p);continue}
+      const [k,n,a]=p;
+      if(k=='pin'||k=='apin')dum().appendField(new Blockly.FieldDropdown(pinOpts(k=='apin')),n);
+      else if(k=='dd')dum().appendField(new Blockly.FieldDropdown(a),n);
+      else if(k=='val'){this.appendValueInput(n).setCheck(a||null);inp=null}
+      else if(k=='stmt'){this.appendStatementInput(n);inp=null}
+    }
+    this.setColour(colour);this.setInputsInline(!o.block);
+    if(o.out!==undefined)this.setOutput(true,o.out);
+    else if(o.hat)this.hat='cap';
+    else{this.setPreviousStatement(true);this.setNextStatement(true)}
+    if(o.tip)this.setTooltip(o.tip);
+  }};
+}
+function defineBlocks(){
+  mk('a_setup',HUE.ctl,['başlangıçta (bir kez)',['stmt','DO']],{hat:1,block:1,tip:'setup(): kart açılınca bir kez çalışır'});
+  mk('a_loop',HUE.ctl,['sürekli tekrarla',['stmt','DO']],{hat:1,block:1,tip:'loop(): sürekli tekrar eder'});
+  mk('a_wait',HUE.ctl,['bekle',['val','T','Number'],['dd','U',[['saniye','s'],['milisaniye','ms']]]]);
+  mk('a_dwrite',HUE.out,['pin',['pin','PIN'],'durumunu',['dd','ST',HL],'yap']);
+  mk('a_led',HUE.out,['dahili LED’i',['dd','ST',[['yak','HIGH'],['söndür','LOW']]]]);
+  mk('a_awrite',HUE.out,['pin',['pin','PIN'],'PWM değeri',['val','VALUE','Number'],'(0–255)']);
+  mk('a_servo',HUE.out,['pin',['pin','PIN'],'servosunu',['val','ANGLE','Number'],'dereceye döndür']);
+  mk('a_tone',HUE.out,['pin',['pin','PIN'],'buzzer',['val','FREQ','Number'],'Hz çal',['val','DUR','Number'],'ms']);
+  mk('a_notone',HUE.out,['pin',['pin','PIN'],'buzzer sesini durdur']);
+  mk('a_print',HUE.out,['seri monitöre yaz',['val','TEXT'],['dd','NL',[['yeni satırla','1'],['aynı satıra','0']]]]);
+  mk('a_lcd',HUE.out,['LCD',['dd','SZ',[['16×2','16'],['20×4','20']]],'satır',['val','ROW','Number'],'sütun',['val','COL','Number'],'yaz',['val','TEXT']]);
+  mk('a_lcdclr',HUE.out,['LCD’yi temizle']);
+  mk('a_neo',HUE.out,['NeoPixel pin',['pin','PIN'],'LED',['val','I','Number'],'renk R',['val','R','Number'],'G',['val','G','Number'],'B',['val','B','Number']]);
+  mk('a_neoshow',HUE.out,['NeoPixel pin',['pin','PIN'],'renkleri göster']);
+  mk('a_dread',HUE.in,['pin',['pin','PIN'],'dijital oku',['dd','MODE',[['normal','INPUT'],['pull-up','INPUT_PULLUP']]]],{out:'Number'});
+  mk('a_aread',HUE.in,['pin',['apin','PIN'],'analog oku'],{out:'Number'});
+  mk('a_button',HUE.in,['pin',['pin','PIN'],'butonu basılı mı'],{out:'Boolean'});
+  mk('a_dist',HUE.in,['mesafe (cm) TRIG',['pin','TRIG'],'ECHO',['pin','ECHO']],{out:'Number'});
+  mk('a_dht',HUE.in,['DHT22 pin',['pin','PIN'],['dd','W',[['sıcaklık °C','T'],['nem %','H']]]],{out:'Number'});
+  mk('a_millis',HUE.in,['çalışma süresi (ms)'],{out:'Number'});
+  mk('a_savail',HUE.in,['seri monitörde veri var mı'],{out:'Boolean'});
+  mk('a_sread',HUE.in,['seri monitörden sayı oku'],{out:'Number'});
+  mk('a_mbshow',HUE.mb,['micro:bit ekranında göster',['val','TEXT']]);
+  mk('a_mbicon',HUE.mb,['micro:bit ikon göster',['dd','IC',[['kalp','10,31,31,14,4'],['gülen yüz','0,10,0,17,14'],['üzgün yüz','0,10,0,14,17'],['evet','0,1,2,20,8'],['hayır','17,10,4,10,17'],['ok yukarı','4,14,21,4,4']]]]);
+  mk('a_mbclr',HUE.mb,['micro:bit ekranını temizle']);
+  mk('a_mbbtn',HUE.mb,['micro:bit',['dd','B',[['A','A'],['B','B']]],'butonu basılı mı'],{out:'Boolean'});
+  mk('a_map',HUE.math,['eşle',['val','V','Number'],'aralık',['val','A','Number'],'–',['val','B','Number'],'→',['val','C','Number'],'–',['val','D','Number']],{out:'Number'});
+}
+
+/* generator */
+let AG,C;
+const san=n=>n.replace(/[ıİ]/g,'i').replace(/[şŞ]/g,'s').replace(/[ğĞ]/g,'g').replace(/[üÜ]/g,'u').replace(/[öÖ]/g,'o').replace(/[çÇ]/g,'c').replace(/[^A-Za-z0-9_]/g,'_').replace(/^(\d)/,'_$1');
+function makeGen(){
+  AG=new Blockly.Generator('Arduino');AG.INDENT='  ';AG.init=function(){this.isInitialized=true};AG.finish=c=>c;
+  AG.scrub_=function(b,code,only){const n=b.nextConnection&&b.nextConnection.targetBlock();return code+(only?'':this.blockToCode(n))};
+  const V=(b,n,d='0')=>AG.valueToCode(b,n,0)||d,F=(b,n)=>b.getFieldValue(n),st=(b,n)=>AG.statementToCode(b,n),fb=AG.forBlock,out=c=>[c,0];
+  const pm=(p,m)=>C.pre.add(`pinMode(${p}, ${m});`),ser=()=>C.pre.add('Serial.begin(9600);');
+  const lcd=(sz=16)=>{C.inc.add('LiquidCrystal_I2C.h');if(!C.decl.has('lcd'))C.decl.set('lcd',`LiquidCrystal_I2C lcd(0x27, ${sz}, ${sz==20?4:2});`);C.pre.add('lcd.init();');C.pre.add('lcd.backlight();')};
+  fb.a_setup=fb.a_loop=()=> '';
+  fb.a_wait=b=>{const t=V(b,'T','1');return F(b,'U')=='s'?`delay(${/^\d+(\.\d+)?$/.test(t)?Math.round(t*1000):t+' * 1000'});\n`:`delay(${t});\n`};
+  fb.a_dwrite=b=>{const p=F(b,'PIN');pm(p,'OUTPUT');return `digitalWrite(${p}, ${F(b,'ST')});\n`};
+  fb.a_led=b=>{pm('LED_BUILTIN','OUTPUT');return `digitalWrite(LED_BUILTIN, ${F(b,'ST')});\n`};
+  fb.a_awrite=b=>{const p=F(b,'PIN');pm(p,'OUTPUT');return `analogWrite(${p}, ${V(b,'VALUE')});\n`};
+  fb.a_servo=b=>{const p=F(b,'PIN');C.inc.add('Servo.h');C.decl.set('servo_'+p,`Servo servo_${p};`);C.pre.add(`servo_${p}.attach(${p});`);return `servo_${p}.write(${V(b,'ANGLE','90')});\n`};
+  fb.a_tone=b=>`tone(${F(b,'PIN')}, ${V(b,'FREQ','440')}, ${V(b,'DUR','200')});\n`;
+  fb.a_notone=b=>`noTone(${F(b,'PIN')});\n`;
+  fb.a_print=b=>{ser();return `Serial.${F(b,'NL')=='1'?'println':'print'}(${V(b,'TEXT','""')});\n`};
+  fb.a_lcd=b=>{lcd(F(b,'SZ'));return `lcd.setCursor(${V(b,'COL')}, ${V(b,'ROW')});\nlcd.print(${V(b,'TEXT','""')});\n`};
+  fb.a_lcdclr=()=>{lcd();return 'lcd.clear();\n'};
+  const neo=p=>{const q=S.parts.find(x=>PARTS[x.type].neo&&x.pins.DIN==p),n=!q?16:q.type=='ring'?q.props.pixels:q.type=='matrix'?q.props.rows*q.props.cols:1;
+    C.inc.add('Adafruit_NeoPixel.h');C.decl.set('neo_'+p,`Adafruit_NeoPixel neo_${p}(${n}, ${p}, NEO_GRB + NEO_KHZ800);`);C.pre.add(`neo_${p}.begin();`);return 'neo_'+p};
+  fb.a_neo=b=>{const o=neo(F(b,'PIN'));return `${o}.setPixelColor(${V(b,'I')}, ${o}.Color(${V(b,'R')}, ${V(b,'G')}, ${V(b,'B')}));\n`};
+  fb.a_neoshow=b=>`${neo(F(b,'PIN'))}.show();\n`;
+  fb.a_dread=b=>{const p=F(b,'PIN');pm(p,F(b,'MODE'));return out(`digitalRead(${p})`)};
+  fb.a_aread=b=>out(`analogRead(${F(b,'PIN')})`);
+  fb.a_button=b=>{const p=F(b,'PIN');pm(p,'INPUT_PULLUP');return out(`(digitalRead(${p}) == LOW)`)};
+  fb.a_dist=b=>{const t=F(b,'TRIG'),e=F(b,'ECHO');pm(t,'OUTPUT');pm(e,'INPUT');
+    C.helpers.set('dist','long mesafeCm(int trig, int echo) {\n  digitalWrite(trig, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trig, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trig, LOW);\n  return pulseIn(echo, HIGH) / 58;\n}');
+    return out(`mesafeCm(${t}, ${e})`)};
+  fb.a_dht=b=>{const p=F(b,'PIN');C.inc.add('DHT.h');C.decl.set('dht_'+p,`DHT dht_${p}(${p}, DHT22);`);C.pre.add(`dht_${p}.begin();`);return out(`dht_${p}.read${F(b,'W')=='T'?'Temperature':'Humidity'}()`)};
+  fb.a_millis=()=>out('millis()');
+  fb.a_savail=()=>{ser();return out('(Serial.available() > 0)')};
+  fb.a_sread=()=>{ser();return out('Serial.parseInt()')};
+  const mbm=()=>{C.inc.add('Adafruit_Microbit.h');C.decl.set('mbm','Adafruit_Microbit_Matrix microbit;');C.pre.add('microbit.begin();')};
+  fb.a_mbshow=b=>{mbm();return `microbit.scrollText(${V(b,'TEXT','""')});\n`};
+  fb.a_mbicon=b=>{mbm();const r=F(b,'IC').split(',').map(n=>'B'+(+n).toString(2).padStart(5,'0'));return `{\n  const uint8_t ikon[] = {${r.join(', ')}};\n  microbit.show(ikon);\n}\n`};
+  fb.a_mbclr=()=>{mbm();return 'microbit.clear();\n'};
+  fb.a_mbbtn=b=>{const p='PIN_BUTTON_'+F(b,'B');C.pre.add(`pinMode(${p}, INPUT);`);return out(`(digitalRead(${p}) == LOW)`)};
+  fb.a_map=b=>out(`map(${V(b,'V')}, ${V(b,'A')}, ${V(b,'B','1023')}, ${V(b,'C')}, ${V(b,'D','255')})`);
+  fb.controls_if=b=>{let c='',n=0;do{c+=(n?' else ':'')+`if (${V(b,'IF'+n,'false')}) {\n${st(b,'DO'+n)}}`;n++}while(b.getInput('IF'+n));
+    if(b.getInput('ELSE'))c+=` else {\n${st(b,'ELSE')}}`;return c+'\n'};
+  fb.controls_repeat_ext=b=>{const i='i'+(C.n++);return `for (int ${i} = 0; ${i} < ${V(b,'TIMES','10')}; ${i}++) {\n${st(b,'DO')}}\n`};
+  fb.controls_whileUntil=b=>{const c=V(b,'BOOL','false');return `while (${F(b,'MODE')=='UNTIL'?'!('+c+')':c}) {\n${st(b,'DO')}}\n`};
+  const vn=b=>san(b.getField('VAR').getText());
+  fb.controls_for=b=>{const v=vn(b);return `for (${v} = ${V(b,'FROM','1')}; ${v} <= ${V(b,'TO','10')}; ${v} += ${V(b,'BY','1')}) {\n${st(b,'DO')}}\n`};
+  fb.logic_compare=b=>out(`(${V(b,'A')} ${{EQ:'==',NEQ:'!=',LT:'<',LTE:'<=',GT:'>',GTE:'>='}[F(b,'OP')]} ${V(b,'B')})`);
+  fb.logic_operation=b=>out(`(${V(b,'A','false')} ${F(b,'OP')=='AND'?'&&':'||'} ${V(b,'B','false')})`);
+  fb.logic_negate=b=>out(`!${V(b,'BOOL','false')}`);
+  fb.logic_boolean=b=>out(F(b,'BOOL')=='TRUE'?'true':'false');
+  fb.math_number=b=>out(String(F(b,'NUM')));
+  fb.math_arithmetic=b=>{const a=V(b,'A'),c=V(b,'B'),o=F(b,'OP');return out(o=='POWER'?`pow(${a}, ${c})`:`(${a} ${{ADD:'+',MINUS:'-',MULTIPLY:'*',DIVIDE:'/'}[o]} ${c})`)};
+  fb.math_modulo=b=>out(`((long)(${V(b,'DIVIDEND')}) % (long)(${V(b,'DIVISOR','1')}))`);
+  fb.math_random_int=b=>{const t=V(b,'TO','100');return out(`random(${V(b,'FROM')}, ${/^-?\d+$/.test(t)?+t+1:t+' + 1'})`)};
+  fb.variables_get=b=>out(vn(b));
+  fb.variables_set=b=>`${vn(b)} = ${V(b,'VALUE')};\n`;
+  fb.math_change=b=>`${vn(b)} += ${V(b,'DELTA','1')};\n`;
+  fb.text=b=>out(JSON.stringify(F(b,'TEXT')));
+  fb.text_join=b=>{const a=[];for(let i=0;b.getInput('ADD'+i);i++)a.push(`String(${V(b,'ADD'+i,'""')})`);return out(a.length?a.join(' + '):'""')};
+}
+function genArduino(ws){
+  C={inc:new Set(),decl:new Map(),pre:new Set(),helpers:new Map(),n:0};AG.init(ws);
+  const top=ws.getTopBlocks(true),hs=top.find(b=>b.type=='a_setup'),hl=top.find(b=>b.type=='a_loop');
+  const sb=hs?AG.statementToCode(hs,'DO'):'',lb=hl?AG.statementToCode(hl,'DO'):'';
+  const vars=ws.getVariableMap().getAllVariables().map(v=>{const isTxt=ws.getAllBlocks(false).some(b=>b.type=='variables_set'&&b.getFieldValue('VAR')==v.getId()&&/^text/.test(b.getInputTargetBlock('VALUE')?.type||''));
+    return `${isTxt?'String':'float'} ${san(v.getName())} = ${isTxt?'""':'0'};`});
+  const L=[...[...C.inc].map(i=>`#include <${i}>`),C.inc.size?'':null,...C.decl.values(),...vars,(C.decl.size||vars.length)?'':null,...[...C.helpers.values()].flatMap(h=>[h,'']),
+    'void setup() {',...[...C.pre].map(x=>'  '+x),sb.replace(/\n$/,''),'}','','void loop() {',lb.replace(/\n$/,''),'}'];
+  return L.filter(x=>x!==null&&x!=='').join('\n').replace(/\n(#include[^\n]*)\n(?!#)/,'\n$1\n\n').replace(/}\nvoid/g,'}\n\nvoid').replace(/;\nvoid setup/,';\n\nvoid setup');
+}
+
+const sh=n=>({shadow:{type:'math_number',fields:{NUM:n}}}),tx=t=>({shadow:{type:'text',fields:{TEXT:t}}});
+const TOOLBOX={kind:'categoryToolbox',contents:[
+ {kind:'category',name:'Çıkış',colour:HUE.out,contents:[{kind:'block',type:'a_dwrite'},{kind:'block',type:'a_led'},{kind:'block',type:'a_awrite',inputs:{VALUE:sh(128)}},
+   {kind:'block',type:'a_servo',inputs:{ANGLE:sh(90)}},{kind:'block',type:'a_tone',inputs:{FREQ:sh(440),DUR:sh(200)}},{kind:'block',type:'a_notone'},
+   {kind:'block',type:'a_print',inputs:{TEXT:tx('Merhaba')}},{kind:'block',type:'a_lcd',inputs:{ROW:sh(0),COL:sh(0),TEXT:tx('Merhaba')}},{kind:'block',type:'a_lcdclr'},
+   {kind:'block',type:'a_neo',inputs:{I:sh(0),R:sh(255),G:sh(0),B:sh(80)}},{kind:'block',type:'a_neoshow'}]},
+ {kind:'category',name:'Giriş',colour:HUE.in,contents:['a_dread','a_aread','a_button','a_dist','a_dht','a_millis','a_savail','a_sread'].map(type=>({kind:'block',type}))},
+ {kind:'category',name:'micro:bit',colour:HUE.mb,contents:[{kind:'block',type:'a_mbshow',inputs:{TEXT:tx('MERHABA')}},{kind:'block',type:'a_mbicon'},{kind:'block',type:'a_mbclr'},{kind:'block',type:'a_mbbtn'}]},
+ {kind:'category',name:'Kontrol',colour:HUE.ctl,contents:[{kind:'block',type:'a_setup'},{kind:'block',type:'a_loop'},{kind:'block',type:'a_wait',inputs:{T:sh(1)}},
+   {kind:'block',type:'controls_if'},{kind:'block',type:'controls_if',extraState:{hasElse:true}},{kind:'block',type:'controls_repeat_ext',inputs:{TIMES:sh(10)}},
+   {kind:'block',type:'controls_whileUntil'},{kind:'block',type:'controls_for',inputs:{FROM:sh(1),TO:sh(10),BY:sh(1)}}]},
+ {kind:'category',name:'Matematik',colour:HUE.math,contents:[{kind:'block',type:'math_number'},{kind:'block',type:'math_arithmetic',inputs:{A:sh(1),B:sh(1)}},
+   {kind:'block',type:'math_modulo',inputs:{DIVIDEND:sh(10),DIVISOR:sh(3)}},{kind:'block',type:'math_random_int',inputs:{FROM:sh(1),TO:sh(100)}},
+   {kind:'block',type:'a_map',inputs:{V:sh(512),A:sh(0),B:sh(1023),C:sh(0),D:sh(255)}}]},
+ {kind:'category',name:'Mantık',colour:HUE.logic,contents:[{kind:'block',type:'logic_compare',inputs:{A:sh(0),B:sh(0)}},{kind:'block',type:'logic_operation'},{kind:'block',type:'logic_negate'},{kind:'block',type:'logic_boolean'}]},
+ {kind:'category',name:'Değişkenler',colour:HUE.var,custom:'VARIABLE'},
+ {kind:'category',name:'Metin',colour:HUE.txt,contents:[{kind:'block',type:'text'},{kind:'block',type:'text_join'}]},
+]};
+const W1=(st,next)=>({block:{type:'a_dwrite',fields:{PIN:'13',ST:st},next}});
+const WAIT=next=>({block:{type:'a_wait',fields:{U:'s'},inputs:{T:sh(1)},next}});
+const DEFAULT_BLOCKS={blocks:{languageVersion:0,blocks:[{type:'a_setup',x:24,y:24},{type:'a_loop',x:24,y:130,inputs:{DO:W1('HIGH',WAIT(W1('LOW',WAIT())))}}]}};
+
+const Blk={ws:null,lastGen:'',
+  init(){
+    if(!window.Blockly){$('#blocklyDiv').innerHTML='<div class="empty">Blok editörü yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.</div>';return}
+    defineBlocks();makeGen();
+    const dark=document.documentElement.dataset.theme=='dark'||(document.documentElement.dataset.theme!='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+    const st=c=>({colourPrimary:c});
+    const theme=Blockly.Theme.defineTheme('devrelab'+(dark?'D':'L'),{base:Blockly.Themes.Classic,
+      blockStyles:{logic_blocks:st(HUE.logic),loop_blocks:st(HUE.ctl),math_blocks:st(HUE.math),text_blocks:st(HUE.txt),variable_blocks:st(HUE.var),variable_dynamic_blocks:st(HUE.var),procedure_blocks:st(HUE.ctl)},
+      componentStyles:{workspaceBackgroundColour:dark?'#1B1B1E':'#FAFAFC',toolboxBackgroundColour:dark?'#232326':'#FFFFFF',toolboxForegroundColour:dark?'#F5F5F7':'#1D1D1F',
+        flyoutBackgroundColour:dark?'#2C2C2E':'#F2F2F7',flyoutForegroundColour:dark?'#F5F5F7':'#1D1D1F',flyoutOpacity:1,scrollbarColour:'#8E8E93',insertionMarkerColour:'#007AFF'},
+      fontStyle:{family:'-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",sans-serif',weight:'600',size:11}});
+    this.ws=Blockly.inject('blocklyDiv',{toolbox:TOOLBOX,renderer:'zelos',theme,trashcan:false,sounds:false,media:'',
+      zoom:{wheel:true,startScale:.68,controls:false,minScale:.3,maxScale:2},move:{scrollbars:true,drag:true,wheel:false},grid:{spacing:24,length:2,colour:dark?'#3A3A3C':'#D8D8DE',snap:false}});
+    this.ws.addChangeListener(e=>{if(e.isUiEvent)return;const c=genArduino(this.ws);if(c!==this.lastGen){this.lastGen=c;setCode(c);S.textEdited=false;$('#blkNote').hidden=true;save()}});
+  },
+  load(j){if(!this.ws)return;try{Blockly.serialization.workspaces.load(j||DEFAULT_BLOCKS,this.ws)}catch(e){Blockly.serialization.workspaces.load(DEFAULT_BLOCKS,this.ws)}this.lastGen=genArduino(this.ws)},
+  save(){return this.ws?Blockly.serialization.workspaces.save(this.ws):null},
+  code(){return this.ws?genArduino(this.ws):''},
+  resize(){if(this.ws)Blockly.svgResize(this.ws)},
+};
+/* ---------- project state ---------- */
+const stage=$('#stage'),tip=$('#tip');
+function newPart(type,pins,props,rot){
+  const d=PARTS[type];return{id:S.nextId++,type,x:0,y:0,rot:rot||0,pins:{},props:{...(d.props||{}),...(props||{})},st:structuredClone(d.st),_pins:pins};
+}
+function nextSpot(){const bw=BO.el?BO.el.offsetWidth:300,x0=S.bx+bw+110;let x=x0,y=S.by,rowH=0;
+  for(const q of S.parts){let w=200,h=150;if(q.e){const s=(q.rot||0)%180;w=s?q.e.offsetHeight:q.e.offsetWidth;h=s?q.e.offsetWidth:q.e.offsetHeight}else if(q.el){w=q.el.offsetWidth;h=q.el.offsetHeight}
+    x=Math.max(x,q.x+w+70);rowH=Math.max(rowH,h);if(x>x0+560){x=x0;y+=rowH+70;rowH=0}}
+  if(x>x0+560){x=x0;y+=rowH+70}return[x,y]}
+async function loadProject(d){
+  stopSim();S.board=BOARDS[d.board]?d.board:'uno';S.parts=[];S.wires=[];S.nextId=1;S.bx=d.bx??40;S.by=d.by??60;S.sel=null;S.selWire=null;S.draw=null;
+  $('#boardSel').value=S.board;setCode(d.code||'');S.textEdited=d.textEdited??true;render();await BO.e?.updateComplete;
+  const auto=[];
+  for(const q of d.parts||[]){
+    if(Array.isArray(q)){if(!PARTS[q[0]])continue;const p=newPart(q[0],q[1],q[2],q[3]);[p.x,p.y]=nextSpot();S.parts.push(p);const w=partEl(p);place(w,p.x,p.y);world.append(w);await p.e?.updateComplete;orient(p);auto.push(p)}
+    else if(PARTS[q.type]){const p={rot:0,...q,st:{...structuredClone(PARTS[q.type].st),...(q.st||{})}};S.parts.push(p);S.nextId=Math.max(S.nextId,q.id+1);if(d.v!=3){p._pins=q.pins;auto.push(p)}}
+  }
+  render();await Promise.all(S.parts.map(p=>p.e&&p.e.updateComplete));
+  if(d.v==3)S.wires=d.wires||[];
+  for(const p of auto){autowire(p,p._pins);delete p._pins}
+  syncPins();if(d.blocks!==undefined)Blk.load(d.blocks);
+  if(!S.textEdited&&Blk.ws)setCode(Blk.code());
+  render();renderInsp();if(!d.nofit)requestAnimationFrame(fit);
+}
+let saveT;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('devrelab3',JSON.stringify(snapshot()))}catch(e){}histPush()},300)}
+function snapshot(){return{v:3,board:S.board,bx:Math.round(S.bx),by:Math.round(S.by),code:$('#code').value,textEdited:!!S.textEdited,blocks:Blk.save(),wires:S.wires,
+  parts:S.parts.map(p=>({id:p.id,type:p.type,x:Math.round(p.x),y:Math.round(p.y),rot:p.rot||0,props:p.props,
+    st:Object.fromEntries(Object.keys(PARTS[p.type].st).filter(k=>k!='q').map(k=>[k,p.st[k]]))}))}}
+
+/* ---------- view: wheel zoom + pan ---------- */
+function applyView(){world.style.transform=`translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
+  stage.style.backgroundSize=`${20*S.zoom}px ${20*S.zoom}px`;stage.style.backgroundPosition=`${S.panX}px ${S.panY}px`;S.wDirty=true}
+const toWorld=(cx,cy)=>{const r=stage.getBoundingClientRect();return{x:(cx-r.left-S.panX)/S.zoom,y:(cy-r.top-S.panY)/S.zoom}};
+stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  const z=Math.min(4,Math.max(.25,S.zoom*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015))));
+  S.panX=mx-(mx-S.panX)*z/S.zoom;S.panY=my-(my-S.panY)*z/S.zoom;S.zoom=z;applyView()},{passive:false});
+function fit(){const items=[BO.el,...S.parts.map(p=>p.el)].filter(Boolean);if(!items.length)return;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;items.forEach(el=>{const x=parseFloat(el.style.left),y=parseFloat(el.style.top);x0=Math.min(x0,x);y0=Math.min(y0,y-30);x1=Math.max(x1,x+el.offsetWidth);y1=Math.max(y1,y+el.offsetHeight)});
+  const r=stage.getBoundingClientRect(),z=Math.min(2.2,Math.max(.3,Math.min((r.width-60)/(x1-x0),(r.height-60)/(y1-y0))));
+  S.zoom=z;S.panX=(r.width-(x1-x0)*z)/2-x0*z;S.panY=(r.height-(y1-y0)*z)/2-y0*z;applyView()}
+$('#fitBtn').addEventListener('click',fit);
+
+/* ---------- palette with pictures; parts follow the mouse until placed ---------- */
+const MOTOR_SVG='<svg width="46" height="46" viewBox="-32 -32 64 64"><circle r="30" fill="#3A3A3C"/><g fill="#E5E5EA">'+[0,60,120,180,240,300].map(a=>`<rect x="-2.5" y="-26" width="5" height="13" rx="2.5" transform="rotate(${a})"/>`).join('')+'</g><circle r="7" fill="#E5E5EA"/></svg>';
+function renderPalette(){
+  $('#partList').innerHTML=GROUPS.map(g=>`<div class="group" data-g="${g}"><h3>${g}</h3><div class="tiles">${Object.entries(PARTS).filter(([,d])=>d.g==g).map(([t,d])=>
+    `<button class="tile" data-t="${t}" title="${d.name} · ${d.d}"><span class="pv">${d.custom?MOTOR_SVG:''}</span><span class="tn">${d.name}</span></button>`).join('')}</div></div>`).join('')+'<p class="hint" id="noPart" hidden>Bu adla parça yok.</p>';
+  $('#partList').querySelectorAll('.tile').forEach(async tl=>{const d=PARTS[tl.dataset.t];if(d.custom)return;
+    const e=d.svg?svgEl(d):document.createElement(d.tag);if(!d.svg)Object.assign(e,d.props||{});const pv=tl.querySelector('.pv');pv.append(e);
+    await e.updateComplete;const fitT=()=>{const r=e.getBoundingClientRect();if(!r.width){setTimeout(fitT,250);return}e.style.transform=`translate(-50%,-50%) scale(${Math.min(58/r.width,46/r.height,1.6)})`};requestAnimationFrame(fitT)});
+}
+$('#partSearch').addEventListener('input',()=>{const q=$('#partSearch').value.trim().toLowerCase();let any=0;
+  $('#partList').querySelectorAll('.group').forEach(g=>{let n=0;g.querySelectorAll('.tile').forEach(t=>{const d=PARTS[t.dataset.t],ok=!q||(d.name+' '+d.d+' '+d.g).toLowerCase().includes(q);t.hidden=!ok;n+=ok});g.hidden=!n;any+=n});
+  $('#noPart').hidden=!!any});
+function beginPlace(type,e){
+  cancelPlace();const d=PARTS[type],gw=document.createElement('div');gw.className='wp ghost';
+  if(d.custom)gw.innerHTML=`<div class="part" style="position:static;padding:14px">${MOTOR_SVG}</div>`;else if(d.svg)gw.append(svgEl(d));else{const el=document.createElement(d.tag);Object.assign(el,d.props||{});gw.append(el)}
+  gw.hidden=true;world.append(gw);S.placing={type,gw,sx:e.clientX,sy:e.clientY,moved:false};stage.classList.add('placing');
+}
+function moveGhost(e){const pl=S.placing;if(!pl)return;const r=stage.getBoundingClientRect(),inside=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+  if(Math.hypot(e.clientX-pl.sx,e.clientY-pl.sy)>6)pl.moved=true;pl.gw.hidden=!inside;if(!inside)return;
+  const W=toWorld(e.clientX,e.clientY);place(pl.gw,W.x-pl.gw.offsetWidth/2,W.y-pl.gw.offsetHeight/2)}
+function cancelPlace(){if(S.placing){S.placing.gw.remove();S.placing=null;stage.classList.remove('placing')}}
+async function placeAt(e){const pl=S.placing,W=toWorld(e.clientX,e.clientY),gw=pl.gw,w=gw.offsetWidth,h=gw.offsetHeight;cancelPlace();
+  const p=newPart(pl.type);p.x=Math.round(W.x-w/2);p.y=Math.round(W.y-h/2);S.parts.push(p);S.sel=p.id;S.selWire=null;render();await p.e?.updateComplete;snapToBB(p);syncPins();S.wDirty=true;renderInsp();showPop();save()}
+$('#partList').addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if(!t)return;e.preventDefault();beginPlace(t.dataset.t,e)});
+document.addEventListener('pointermove',e=>{moveGhost(e);if(S.draw){S.mouse=toWorld(e.clientX,e.clientY);drawPreview()}});
+document.addEventListener('pointerup',e=>{if(!S.placing||!S.placing.moved)return;const r=stage.getBoundingClientRect();
+  if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)placeAt(e);else cancelPlace()});
+
+/* ---------- canvas: wiring, selecting, dragging, panning ---------- */
+const refOf=c=>({p:c.dataset.p==='board'?'board':+c.dataset.p,n:c.dataset.n});
+const refName=r=>r.p==='board'?`${BRD().name} · ${r.n}`:`${PARTS[objOf(r.p).type].name} #${r.p} · ${r.n}`;
+function clearSel(){S.sel=null;S.selWire=null;world.querySelectorAll('.wp.sel').forEach(x=>x.classList.remove('sel'));renderInsp();showPop();S.wDirty=true}
+function endDraw(){S.draw=null;wires.classList.remove('drawing');drawPreview()}
+stage.addEventListener('contextmenu',e=>{if(S.draw||S.placing){e.preventDefault();cancelDraw();cancelPlace()}});
+stage.addEventListener('pointerdown',e=>{
+  const W=toWorld(e.clientX,e.clientY);
+  if(e.button==2)return;
+  if(S.placing){if(e.button==0)placeAt(e);return}
+  const panStart=()=>{e.preventDefault();stage.setPointerCapture(e.pointerId);stage.classList.add('panning');const sx=e.clientX-S.panX,sy=e.clientY-S.panY;
+    const mv=ev=>{S.panX=ev.clientX-sx;S.panY=ev.clientY-sy;applyView()},up=()=>{stage.classList.remove('panning');stage.removeEventListener('pointermove',mv);stage.removeEventListener('pointerup',up)};
+    stage.addEventListener('pointermove',mv);stage.addEventListener('pointerup',up)};
+  if(e.button==1)return panStart();
+  const we=e.target.closest('circle.wend');if(we){e.preventDefault();grabWireEnd(+we.dataset.w,we.dataset.e);return}
+  const pin=e.target.closest('circle.pin');
+  if(pin){e.preventDefault();const r=refOf(pin);
+    if(!S.draw){S.draw={a:r,pts:[],c:defColor(r,r)};S.mouse=W;wires.classList.add('drawing');tip.hidden=true}
+    else if(!(S.draw.a.p===r.p&&S.draw.a.n===r.n))finishDraw(r);
+    drawPreview();return}
+  if(S.draw){S.draw.pts.push(W);drawPreview();return}
+  const bend=e.target.closest('circle.bend');
+  if(bend){e.preventDefault();const w=S.wires[+bend.dataset.w],j=+bend.dataset.b;stage.setPointerCapture(e.pointerId);
+    const mv=ev=>{w.pts[j]=toWorld(ev.clientX,ev.clientY);S.wDirty=true},up=()=>{stage.removeEventListener('pointermove',mv);stage.removeEventListener('pointerup',up);save()};
+    stage.addEventListener('pointermove',mv);stage.addEventListener('pointerup',up);return}
+  const wh=e.target.closest('path.wh');
+  if(wh){S.selWire=+wh.dataset.w;S.sel=null;world.querySelectorAll('.wp.sel').forEach(x=>x.classList.remove('sel'));showPop();renderInsp();openTab('insp');S.wDirty=true;return}
+  if(e.target.closest('#pop'))return;
+  const w=e.target.closest('.wp');
+  if(!w){if(e.shiftKey)return bandStart(e);clearSel();return panStart()}
+  S.selWire=null;if(e.shiftKey&&w.dataset.id!='board')select(w.dataset.id,true);else if(!S.selSet.has(+w.dataset.id))select(w.dataset.id);
+  const obj=S.parts.find(p=>p.id==w.dataset.id),d=obj&&PARTS[obj.type];
+  if(d&&d.ia&&!e.target.closest('.plab'))return;
+  if(e.target.closest('input,button,select'))return;
+  e.preventDefault();w.setPointerCapture(e.pointerId);w.classList.add('drag');
+  const sx=e.clientX,sy=e.clientY,ox=obj?obj.x:S.bx,oy=obj?obj.y:S.by;
+  const group=obj&&S.selSet.has(obj.id)?S.parts.filter(q=>q!==obj&&S.selSet.has(q.id)).map(q=>[q,q.x,q.y]):[];
+  const riders=obj&&d.bb?S.parts.filter(q=>q!==obj&&q.e&&pinNames(q.id,q).some(n=>{const t=pinXY(q,n);return t&&bbNear(obj,t,1)})).map(q=>[q,q.x,q.y]):[];
+  const mv=ev=>{const x=ox+(ev.clientX-sx)/S.zoom,y=oy+(ev.clientY-sy)/S.zoom;
+    if(obj){obj.x=x;obj.y=y;place(w,x,y);placePop(obj);[...riders,...group].forEach(([q,qx,qy])=>{q.x=qx+x-ox;q.y=qy+y-oy;place(q.el,q.x,q.y)})}else{S.bx=x;S.by=y;place(w,x,y)}S.wDirty=true};
+  const up=()=>{w.classList.remove('drag');w.removeEventListener('pointermove',mv);w.removeEventListener('pointerup',up);if(obj){snapToBB(obj);syncPins();S.wDirty=true}save()};
+  w.addEventListener('pointermove',mv);w.addEventListener('pointerup',up);
+});
+stage.addEventListener('pointerover',e=>{const c=e.target.closest&&e.target.closest('circle.pin');if(!c)return;
+  const r=stage.getBoundingClientRect(),b=c.getBoundingClientRect(),ref=refOf(c);
+  tip.textContent=ref.p==='board'?`${BRD().name} · ${ref.n}`:`${PARTS[objOf(ref.p).type].name} · ${ref.n}`;tip.hidden=false;
+  tip.style.left=(b.left-r.left+b.width/2)+'px';tip.style.top=(b.top-r.top-8)+'px'});
+stage.addEventListener('pointerout',e=>{if(e.target.closest&&e.target.closest('circle.pin'))tip.hidden=true});
+document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,textarea,select,#blocklyDiv'))return;
+  if(e.key=='Escape'){cancelDraw();cancelPlace()}
+  if(e.key=='Delete'||e.key=='Backspace'){
+    if(S.draw){S.draw.pts.pop();drawPreview();return}
+    if(S.selWire!=null){S.wires.splice(S.selWire,1);S.selWire=null;syncPins();S.wDirty=true;renderInsp();save()}
+    else if(S.selSet.size>1)delSel();else if(S.sel!=null&&S.sel!=='board'){delPart(S.sel)}}
+});
+function delPart(id){dropWiresOf(id);S.parts=S.parts.filter(x=>x.id!==id);S.sel=null;syncPins();render();renderInsp()}
+
+/* ---------- inspector ---------- */
+const LEDC=[['Kırmızı','red'],['Yeşil','green'],['Mavi','blue'],['Sarı','yellow'],['Beyaz','white'],['Turuncu','orange'],['Mor','purple']];
+const codeName=n=>{const l=pinLabel(n);return /^A\d/.test(l)?l:String(n)};
+const row=(l,r,id)=>`<div class="row">${id?`<label for="${id}">${l}</label>`:l}${r}</div>`;
+function renderInsp(){
+  const el=$('#insp'),b=BRD();
+  if(S.selWire!=null&&S.wires[S.selWire]){const w=S.wires[S.selWire];
+    el.innerHTML=`<p class="sect">Kablo</p><div class="form">${row('Başlangıç',`<span class="sub">${refName(w.a)}</span>`)}${row('Bitiş',`<span class="sub">${refName(w.b)}</span>`)}</div>
+      <p class="sect">Renk</p><div class="swatches">${WIRE_COLORS.map(([n,c])=>`<button class="sw${w.c==c?' on':''}" style="background:${c}" data-c="${c}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
+      <p class="sub" style="margin:0 4px 14px">Kıvrım noktalarını sürükleyerek kabloyu düzenleyebilirsin.</p><button class="btn danger" id="delWire">Kabloyu sil</button>`;
+    el.querySelectorAll('.sw').forEach(s=>s.addEventListener('click',()=>{w.c=s.dataset.c;S.wDirty=true;renderInsp();save()}));
+    el.querySelector('#delWire').addEventListener('click',()=>{S.wires.splice(S.selWire,1);S.selWire=null;syncPins();S.wDirty=true;renderInsp();save()});return}
+  if(S.sel=='board'){el.innerHTML=`<p class="sect">${b.name}</p><div class="form">${row('Mikrodenetleyici',`<span class="sub">${b.chip}</span>`)}${row('Çalışma gerilimi',`<span class="sub">${b.volt}</span>`)}
+    ${row('ADC',`<span class="sub">${b.adc==4095?'12-bit · 0–4095':'10-bit · 0–1023'}</span>`)}${row('Kablosuz',`<span class="sub">${b.wifi?'Wi-Fi'+(b.bt?' · Bluetooth LE':''):'Yok'}</span>`)}
+    ${row('I²C',`<span class="sub mono">SDA ${pinLabel(b.sda)} · SCL ${pinLabel(b.scl)}</span>`)}${row('SPI',`<span class="sub mono">MOSI ${pinLabel(b.mosi)} · MISO ${pinLabel(b.miso)} · SCK ${pinLabel(b.sck)}</span>`)}
+    ${row('Dahili LED',`<span class="sub mono">LED_BUILTIN = ${b.led}</span>`)}</div>`;return}
+  const p=S.parts.find(x=>x.id==S.sel);
+  if(!p){el.innerHTML='<div class="empty">Bir parçaya ya da kabloya tıkla.<br>Kablo çekmek için bir pine tıkla, sonra hedef pine tıkla.</div>';return}
+  const d=PARTS[p.type],opts=k=>`<option value="">Bağlı değil</option>${b.pins.map(x=>`<option value="${x.n}" ${x.n==p.pins[k]?'selected':''}>${x.l}${b.analog.has(x.n)?' · analog':''}</option>`).join('')}`;
+  let props='';
+  if(p.type=='led')props+=row('Renk',`<select id="pp-color">${LEDC.map(([n,c])=>`<option value="${c}" ${c==p.props.color?'selected':''}>${n}</option>`).join('')}</select>`,'pp-color');
+  if(p.type.startsWith('button'))props+=row('Renk',`<select id="pp-color">${LEDC.slice(0,5).map(([n,c])=>`<option value="${c}" ${c==p.props.color?'selected':''}>${n}</option>`).join('')}</select>`,'pp-color');
+  if(p.type=='ring')props+=row('LED sayısı',`<input id="pp-pixels" type="number" min="1" max="60" value="${p.props.pixels}">`,'pp-pixels');
+  if(p.type=='matrix')props+=row('Satır',`<input id="pp-rows" type="number" min="1" max="32" value="${p.props.rows}">`,'pp-rows')+row('Sütun',`<input id="pp-cols" type="number" min="1" max="32" value="${p.props.cols}">`,'pp-cols');
+  if(p.type=='resistor')props+=row('Değer (Ω)',`<input id="pp-value" value="${p.props.value}">`,'pp-value');
+  if(!d.custom)props+=row('Yön',`<select id="pp-rot">${[0,90,180,270].map(r=>`<option value="${r}" ${r==(p.rot||0)?'selected':''}>${r}°</option>`).join('')}</select>`,'pp-rot');
+  const keys=[...d.pins,...Object.keys(d.fix||{})];
+  el.innerHTML=`<p class="sect">${d.name} · #${p.id}</p>
+   ${keys.length?`<div class="form">${keys.map(k=>row(k,`<select id="pin-${p.id}-${k}" data-k="${k}">${opts(k)}</select>`,`pin-${p.id}-${k}`)).join('')}</div>
+   <button class="btn small" id="autoWire" style="margin:0 0 16px">Otomatik kablola</button>`:''}
+   <p class="sect">Ayarlar</p><div class="form">${props}</div>
+   ${d.ctrl?'<p class="sub" style="margin:0 4px 14px">Sensör değerleri, parçanın altındaki panelden değişir.</p>':''}
+   <button class="btn danger" id="delPart">Parçayı sil</button>`;
+  el.querySelectorAll('select[data-k]').forEach(s=>s.addEventListener('change',()=>{const k=s.dataset.k;dropWiresOf(p.id,k);
+    if(s.value!=='')S.wires.push({a:{p:'board',n:boardName(+s.value)},b:{p:p.id,n:k},pts:[],c:`var(${WCOL[S.wires.length%WCOL.length]})`,curve:true});syncPins();S.wDirty=true;renderInsp();save()}));
+  el.querySelector('#autoWire')?.addEventListener('click',()=>{autowire(p);renderInsp();save()});
+  el.querySelectorAll('[id^=pp-]').forEach(i=>i.addEventListener('change',()=>{const k=i.id.slice(3),v=i.type=='number'?Math.max(1,Math.min(+i.max,+i.value||1)):i.value;
+    if(k=='rot')p.rot=+v;else p.props[k]=v;render()}));
+  el.querySelector('#delPart').addEventListener('click',()=>delPart(p.id));
+}
+function select(id){S.sel=id=='board'?'board':+id;world.querySelectorAll('.wp').forEach(e=>e.classList.toggle('sel',e.dataset.id==id));renderInsp();showPop();S.wDirty=true}
+
+/* ---------- tabs & editor ---------- */
+function openTab(t){$('#tabSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.t==t));
+  ['blocks','code','insp'].forEach(k=>$('#tab-'+k).hidden=k!=t);if(t=='blocks'){$('#blkNote').hidden=!S.textEdited;requestAnimationFrame(()=>Blk.resize())}}
+$('#tabSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b)openTab(b.dataset.t)});
+const code=$('#code'),gutter=$('#gutter');
+function setCode(t){code.value=t;updGutter()}
+function updGutter(){gutter.textContent=Array.from({length:code.value.split('\n').length},(_,i)=>i+1).join('\n');gutter.scrollTop=code.scrollTop}
+code.addEventListener('input',()=>{S.textEdited=true;updGutter();save()});
+code.addEventListener('scroll',()=>gutter.scrollTop=code.scrollTop);
+code.addEventListener('keydown',e=>{
+  if(e.key=='Tab'){e.preventDefault();code.setRangeText('  ',code.selectionStart,code.selectionEnd,'end');S.textEdited=true;updGutter()}
+  if(e.key=='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();runSim()}});
+new ResizeObserver(()=>Blk.resize()).observe($('#tab-blocks'));
+
+/* ---------- collapsible code panel ---------- */
+function setCodePanel(open){document.body.classList.toggle('nocode',!open);$('#codeToggle').setAttribute('aria-pressed',open);
+  try{localStorage.setItem('devrelab-code',open?'1':'0')}catch(e){}requestAnimationFrame(()=>{S.wDirty=true;Blk.resize()})}
+$('#codeToggle').addEventListener('click',()=>setCodePanel(document.body.classList.contains('nocode')));
+$('#codeClose').addEventListener('click',()=>setCodePanel(false));
+try{if(localStorage.getItem('devrelab-code')==='0')setCodePanel(false)}catch(e){}
+
+/* ---------- toolbar & serial ---------- */
+$('#boardSel').innerHTML=Object.entries(BOARDS).map(([k,b])=>`<option value="${k}">${b.name}</option>`).join('');
+$('#boardSel').addEventListener('change',async e=>{stopSim();const had=new Set(S.wires.flatMap(w=>[w.a.p,w.b.p]));S.board=e.target.value;S.wires=[];S.parts.forEach(p=>p.pins={});
+  render();await BO.e?.updateComplete;S.parts.filter(p=>had.has(p.id)).forEach(p=>autowire(p));syncPins();render();renderInsp();save()});
+$('#exSel').insertAdjacentHTML('beforeend',Object.entries(EX).map(([k,x])=>`<option value="${k}">${x.name}</option>`).join(''));
+$('#exSel').addEventListener('change',e=>{const x=EX[e.target.value];if(x){loadProject(x);openTab('code')}e.target.value=''});
+$('#runBtn').addEventListener('click',()=>RT.running?stopSim():runSim());
+$('#clearSerial').addEventListener('click',()=>$('#serialOut').textContent='');
+$('#serialForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#serialIn');if(!i.value)return;RT.inBuf+=i.value+'\n';i.value=''});
+$('#exportBtn').addEventListener('click',async()=>{const t=JSON.stringify(snapshot(),null,1);
+  try{await navigator.clipboard.writeText(t);out('[Proje JSON olarak panoya kopyalandı. .json dosyasına yapıştırıp İçe aktar ile geri yükleyebilirsin.]\n','s')}
+  catch(err){out('[Pano erişimi yok. Proje bu tarayıcıda otomatik kaydediliyor.]\n','e')}});
+$('#importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{loadProject(JSON.parse(r.result))}catch(err){out('[Dosya okunamadı: geçerli bir Devrelab JSON dosyası değil.]\n','e')}};r.readAsText(f);e.target.value=''});
+
+/* ---------- start ---------- */
+async function start(){
+  applyView();renderPalette();Blk.init();
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('devrelab3'))||JSON.parse(localStorage.getItem('devrelab2'))}catch(e){}
+  if(saved&&(saved.v==3||saved.v==2)){await loadProject(saved);if(saved.v==2)Blk.load(null)}
+  else{await loadProject({...EX.weather,textEdited:true});Blk.load(null)}
+  openTab(S.textEdited?'code':'blocks');requestAnimationFrame(frame);
+}
+/* ---------- wiring helpers: finish, cancel, move wire ends ---------- */
+function finishDraw(r){const D=S.draw,c=D.c=='#34C759'&&!D.orig?defColor(D.a,r):D.c;addWire(D.a,r,{pts:D.pts,c});endDraw();
+  S.sel=null;S.selSet=new Set();S.selWire=S.wires.length-1;world.querySelectorAll('.wp.sel').forEach(x=>x.classList.remove('sel'));renderInsp();showPop()}
+function cancelDraw(){if(S.draw&&S.draw.orig){S.wires.push(S.draw.orig);syncPins();S.wDirty=true}endDraw()}
+function grabWireEnd(i,end){const w=S.wires.splice(i,1)[0];if(!w)return;const keep=end=='a'?w.b:w.a,pts=end=='a'?[...w.pts].reverse():[...w.pts];
+  S.draw={a:keep,pts,c:w.c,orig:w,drag:true};S.selWire=null;wires.classList.add('drawing');syncPins();S.wDirty=true;renderInsp()}
+document.addEventListener('pointerup',e=>{if(!S.draw||!S.draw.drag)return;S.draw.drag=false;
+  const el=document.elementFromPoint(e.clientX,e.clientY),pin=el&&el.closest&&el.closest('circle.pin');
+  if(pin){const r=refOf(pin);if(!(S.draw.a.p===r.p&&S.draw.a.n===r.n))finishDraw(r)}});
+
+/* ---------- multi-select, rubber band, copy / paste ---------- */
+S.selSet=new Set();
+function select(id,add){const n=id=='board'?'board':+id;
+  if(add&&n!=='board'){S.selSet.has(n)?S.selSet.delete(n):S.selSet.add(n);S.sel=S.selSet.size?[...S.selSet].at(-1):null}
+  else{S.selSet=new Set(n==='board'?[]:[n]);S.sel=n}
+  S.selWire=null;world.querySelectorAll('.wp').forEach(e=>e.classList.toggle('sel',e.dataset.id=='board'?S.sel==='board':S.selSet.has(+e.dataset.id)));renderInsp();showPop();S.wDirty=true}
+function clearSel(){S.sel=null;S.selWire=null;S.selSet=new Set();world.querySelectorAll('.wp.sel').forEach(x=>x.classList.remove('sel'));renderInsp();showPop();S.wDirty=true}
+function bandStart(e){e.preventDefault();stage.setPointerCapture(e.pointerId);const r=stage.getBoundingClientRect(),b=document.createElement('div');b.className='band';stage.append(b);
+  const x0=e.clientX,y0=e.clientY,box=ev=>({l:Math.min(x0,ev.clientX),t:Math.min(y0,ev.clientY),r:Math.max(x0,ev.clientX),b:Math.max(y0,ev.clientY)});
+  const mv=ev=>{const q=box(ev);Object.assign(b.style,{left:q.l-r.left+'px',top:q.t-r.top+'px',width:q.r-q.l+'px',height:q.b-q.t+'px'})};
+  const up=ev=>{stage.removeEventListener('pointermove',mv);stage.removeEventListener('pointerup',up);b.remove();const q=box(ev);
+    S.selSet=new Set(S.parts.filter(p=>{const g=p.el.getBoundingClientRect();return g.right>q.l&&g.left<q.r&&g.bottom>q.t&&g.top<q.b}).map(p=>p.id));
+    S.sel=S.selSet.size?[...S.selSet].at(-1):null;S.selWire=null;world.querySelectorAll('.wp').forEach(x=>x.classList.toggle('sel',S.selSet.has(+x.dataset.id)));renderInsp();showPop()};
+  stage.addEventListener('pointermove',mv);stage.addEventListener('pointerup',up)}
+const selIds=()=>S.selSet.size?S.selSet:new Set(typeof S.sel=='number'?[S.sel]:[]);
+function copySel(){const ids=selIds();if(!ids.size)return false;S.clip={parts:snapshot().parts.filter(q=>ids.has(q.id)),wires:S.wires.filter(w=>ids.has(w.a.p)&&ids.has(w.b.p)).map(w=>structuredClone(w))};return true}
+async function pasteClip(){if(!S.clip)return;const map={},added=[];
+  for(const q of S.clip.parts){q.x+=30;q.y+=30;const p={...structuredClone(q),id:S.nextId++,st:{...structuredClone(PARTS[q.type].st),...structuredClone(q.st)}};map[q.id]=p.id;S.parts.push(p);added.push(p)}
+  for(const w of S.clip.wires){w.pts.forEach(t=>{t.x+=30;t.y+=30});S.wires.push({...structuredClone(w),a:{...w.a,p:map[w.a.p]},b:{...w.b,p:map[w.b.p]}})}
+  render();await Promise.all(added.map(p=>p.e&&p.e.updateComplete));syncPins();
+  S.selSet=new Set(added.map(p=>p.id));S.sel=added.length?added.at(-1).id:null;world.querySelectorAll('.wp').forEach(x=>x.classList.toggle('sel',S.selSet.has(+x.dataset.id)));renderInsp();showPop();save()}
+function delSel(){const ids=selIds();ids.forEach(id=>dropWiresOf(id));S.parts=S.parts.filter(x=>!ids.has(x.id));S.sel=null;S.selSet=new Set();syncPins();render();renderInsp()}
+const _renderInsp=renderInsp;
+renderInsp=function(){if(S.selSet&&S.selSet.size>1&&S.selWire==null){$('#insp').innerHTML=`<p class="sect">${S.selSet.size} parça seçili</p><div class="form">${[...S.selSet].map(id=>{const p=S.parts.find(x=>x.id===id);return p?row(PARTS[p.type].name,`<span class="sub">#${id}</span>`):''}).join('')}</div>
+  <div style="display:flex;gap:8px"><button class="btn small" id="dupSel">Çoğalt</button><button class="btn small danger" id="delSel">Hepsini sil</button></div><p class="sub" style="margin:12px 4px">Shift ile tıklayarak seçime ekle ya da çıkar. Shift ile boş alanı sürükleyerek alan seç.</p>`;
+  $('#dupSel').addEventListener('click',()=>{if(copySel())pasteClip()});$('#delSel').addEventListener('click',delSel);return}_renderInsp()};
+
+/* ---------- undo / redo ---------- */
+const H={stack:[],i:-1,lock:false};
+function histState(){const s=snapshot();return JSON.stringify({board:s.board,bx:s.bx,by:s.by,parts:s.parts,wires:s.wires})}
+function histPush(){if(H.lock)return;const st=histState();if(st===H.stack[H.i])return;H.stack=H.stack.slice(0,H.i+1);H.stack.push(st);if(H.stack.length>80)H.stack.shift();H.i=H.stack.length-1;histUI()}
+async function histGo(d){const j=H.i+d;if(j<0||j>=H.stack.length)return;H.i=j;H.lock=true;const st=JSON.parse(H.stack[j]);
+  await loadProject({...st,v:3,code:$('#code').value,textEdited:S.textEdited,nofit:1});setTimeout(()=>{H.lock=false},350);histUI()}
+function histUI(){$('#undoBtn').disabled=H.i<=0;$('#redoBtn').disabled=H.i>=H.stack.length-1}
+$('#undoBtn').addEventListener('click',()=>histGo(-1));$('#redoBtn').addEventListener('click',()=>histGo(1));
+document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,textarea,select,#blocklyDiv'))return;const m=e.metaKey||e.ctrlKey,k=e.key.toLowerCase();if(!m)return;
+  if(k=='z'&&!e.shiftKey){e.preventDefault();histGo(-1)}else if(k=='y'||(k=='z'&&e.shiftKey)){e.preventDefault();histGo(1)}
+  else if(k=='c'){if(copySel())e.preventDefault()}else if(k=='v'){if(S.clip){e.preventDefault();pasteClip()}}else if(k=='d'){e.preventDefault();if(copySel())pasteClip()}
+  else if(k=='a'){e.preventDefault();S.selSet=new Set(S.parts.map(p=>p.id));S.sel=S.parts.length?S.parts.at(-1).id:null;world.querySelectorAll('.wp').forEach(x=>x.classList.toggle('sel',S.selSet.has(+x.dataset.id)));renderInsp()}});
+
+/* ---------- code editor: highlighting, autocomplete, error lines ---------- */
+const hl=$('#hl'),ac=$('#ac');
+const KW=new Set('if else for while do switch case default break continue return goto sizeof new delete true false const static volatile struct class public private this'.split(' '));
+const TY=new Set('void int long short float double bool boolean byte char unsigned signed String word size_t uint8_t uint16_t uint32_t int8_t int16_t int32_t auto File DateTime'.split(' '));
+const eh=x=>x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function hlCode(src){return src.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(^[ \t]*#\w+[^\n]*)|\b(0x[0-9a-fA-F]+|0b[01]+|\d+\.?\d*(?:[eE][-+]?\d+)?[fFuUlL]*)\b|\b([A-Za-z_]\w*)\b(?=(\s*\()?)|([<>&])/gm,
+  (m,c,s,pp,n,id,call,x)=>c?`<i class="tc">${eh(c)}</i>`:s?`<i class="ts">${eh(s)}</i>`:pp?`<i class="tp">${eh(pp)}</i>`:n?`<i class="tn">${n}</i>`:
+    id?(KW.has(id)?`<i class="tk">${id}</i>`:TY.has(id)||/^[A-Z][A-Z0-9_]+$/.test(id)?`<i class="tt">${id}</i>`:call?`<i class="tf">${id}</i>`:id):eh(x))}
+function updHL(){hl.innerHTML=hlCode(code.value)+'\n ';hl.scrollTop=code.scrollTop;hl.scrollLeft=code.scrollLeft}
+function updGutter(){const n=code.value.split('\n').length;gutter.innerHTML=Array.from({length:n},(_,i)=>i+1===S.errLine?`<b class="errl">${i+1}</b>`:i+1).join('\n');gutter.scrollTop=code.scrollTop;updHL()}
+code.addEventListener('scroll',()=>{hl.scrollTop=code.scrollTop;hl.scrollLeft=code.scrollLeft});
+code.addEventListener('input',()=>{if(S.errLine){S.errLine=null;updGutter()}acUpdate()});
+function markErr(n){S.errLine=n||null;updGutter();if(!n)return;setCodePanel(true);openTab('code');requestAnimationFrame(()=>{code.scrollTop=Math.max(0,(n-4)*19.2)})}
+function synLine(js){let ln=null;const h=e=>{ln=e.lineno;e.preventDefault()};window.addEventListener('error',h);
+  const s=document.createElement('script');s.textContent='(function(){return async function(__G){with(__G){'+js+'\n}}})';document.head.append(s);s.remove();window.removeEventListener('error',h);return ln}
+function semiLint(src){const L=src.replace(/\/\*[\s\S]*?\*\//g,m=>m.replace(/[^\n]/g,' ')).split('\n').map(l=>l.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,'""').replace(/\/\/.*$/,'').trim());
+  for(let i=0;i<L.length;i++){const t=L[i];if(!t||t[0]=='#'||/[;{},(\[+\-*\/%&|=<>?:\\]$/.test(t)||/^(if|else|for|while|do|switch|case|default)\b/.test(t))continue;
+    let j=i+1;while(j<L.length&&!L[j])j++;const nx=L[j]||'';if(/^[{.)\]+\-*\/%&|=<>?:,]/.test(nx))continue;return i+1}return null}
+function errLine(e){const m=String(e&&e.stack||'').match(/<anonymous>:(\d+):\d+/);return m?Math.max(1,+m[1]-2):null}
+const trErr=m=>String(m).replace(/^(\w+) is not defined$/,'"$1" tanımlı değil').replace(/Cannot read properties of (undefined|null) \(reading '(\w+)'\)/,'Tanımsız bir nesnenin "$2" özelliği okunamadı').replace(/^Unexpected token '?(.+?)'?$/,'Beklenmeyen ifade: $1').replace(/is not a function/,'bir fonksiyon değil');
+let ACW=null,acSel=0,acItems=[],acPre='';
+const METHODS='begin print println write read available setCursor clear clearDisplay display show setPixelColor Color attach writeMicroseconds setBrightness setTextSize setTextColor fillScreen drawString fillRect drawLine drawCircle fillCircle setRotation readTemperature readHumidity getKey step setSpeed decode resume showNumberDec setRow setLed parseInt readString readStringUntil backlight init now hour minute second'.split(' ');
+function acWords(){if(!ACW)ACW=[...new Set([...Object.keys(makeAPI(-7)).filter(k=>!k.startsWith('__')),...TY,...KW,'setup','loop'])];
+  return [...new Set([...ACW,...(code.value.match(/\b[A-Za-z_]\w{2,}\b/g)||[])])]}
+function acUpdate(){const pos=code.selectionStart,before=code.value.slice(0,pos),m=before.match(/(\.)?([A-Za-z_]\w*)$/);
+  if(!m||m[2].length<2){ac.hidden=true;return}acPre=m[2];const lp=acPre.toLowerCase(),src=m[1]?METHODS:acWords();
+  acItems=src.filter(w=>w.toLowerCase().startsWith(lp)&&w!==acPre).sort((a,b)=>a.length-b.length).slice(0,8);if(!acItems.length){ac.hidden=true;return}
+  acSel=0;const lines=before.split('\n'),cs=getComputedStyle(code),cw=acCharW||(acCharW=(()=>{const c=document.createElement('canvas').getContext('2d');c.font=cs.font;return c.measureText('M').width})());
+  ac.style.left=Math.max(0,4+(lines.at(-1).length-acPre.length)*cw-code.scrollLeft)+'px';ac.style.top=(12+lines.length*19.2-code.scrollTop+2)+'px';acRender();ac.hidden=false}
+let acCharW=0;
+function acRender(){ac.innerHTML=acItems.map((w,i)=>`<button class="${i==acSel?'on':''}" data-i="${i}" tabindex="-1">${w}</button>`).join('')}
+function acAccept(i){const w=acItems[i],p=code.selectionStart;code.setRangeText(w,p-acPre.length,p,'end');ac.hidden=true;S.textEdited=true;updGutter();save();code.focus()}
+ac.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(b){e.preventDefault();acAccept(+b.dataset.i)}});
+code.addEventListener('keydown',e=>{if(ac.hidden)return;
+  if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();e.stopImmediatePropagation();acSel=(acSel+(e.key=='ArrowDown'?1:-1)+acItems.length)%acItems.length;acRender()}
+  else if(e.key=='Enter'||e.key=='Tab'){e.preventDefault();e.stopImmediatePropagation();acAccept(acSel)}
+  else if(e.key=='Escape'){ac.hidden=true}},true);
+code.addEventListener('blur',()=>setTimeout(()=>ac.hidden=true,150));
+
+/* ---------- serial plotter ---------- */
+const PL={series:new Map(),line:'',on:false};const PLC=['#007AFF','#FF9500','#34C759','#FF2D55','#AF52DE','#30B0C7'];
+function plotReset(){PL.series=new Map();PL.line=''}
+function plotFeed(s){PL.line+=s;const L=PL.line.split('\n');PL.line=L.pop();
+  for(const ln of L){let k=0;for(const t of ln.trim().split(/[\s,;\t]+/)){const m=t.match(/^([^:=]+)[:=](-?\d*\.?\d+(?:e-?\d+)?)$/),v=m?+m[2]:/^-?\d*\.?\d+(e-?\d+)?$/.test(t)?+t:null;
+    if(v==null)continue;const lab=m?m[1]:'Değer '+(++k);if(!PL.series.has(lab)){if(PL.series.size>=6)continue;PL.series.set(lab,[])}const a=PL.series.get(lab);a.push(v);if(a.length>300)a.shift()}}}
+function drawPlot(){if(!PL.on)return;const cv=$('#plot'),r=cv.getBoundingClientRect(),dp=devicePixelRatio||1;cv.width=r.width*dp;cv.height=r.height*dp;const g=cv.getContext('2d');g.scale(dp,dp);
+  const cs=getComputedStyle(document.body),fg=cs.getPropertyValue('--label2'),gr=cs.getPropertyValue('--sep');g.font='10px '+cs.getPropertyValue('--mono');
+  let lo=Infinity,hi=-Infinity;PL.series.forEach(a=>a.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v)}));
+  if(!isFinite(lo)){g.fillStyle=fg;g.fillText('Grafik için Serial.println ile sayı yazdır (örn. sicaklik:24).',12,22);requestAnimationFrame(drawPlot);return}
+  if(hi-lo<1e-9){hi+=1;lo-=1}const pad=(hi-lo)*.08;hi+=pad;lo-=pad;const L=46,T=22,W=r.width-L-10,Hh=r.height-T-12,y=v=>T+Hh-(v-lo)/(hi-lo)*Hh;
+  g.strokeStyle=gr;g.fillStyle=fg;g.lineWidth=1;for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,yy=y(v);g.beginPath();g.moveTo(L,yy);g.lineTo(L+W,yy);g.stroke();g.fillText(+v.toFixed(2),4,yy+3)}
+  let i=0,lx=L;PL.series.forEach((a,lab)=>{const c=PLC[i++%6];g.strokeStyle=c;g.lineWidth=1.8;g.beginPath();a.forEach((v,j)=>{const x=L+W*(j+300-a.length)/299;j?g.lineTo(x,y(v)):g.moveTo(x,y(v))});g.stroke();
+    g.fillStyle=c;g.fillRect(lx,8,8,8);g.fillStyle=fg;g.fillText(lab,lx+11,15);lx+=g.measureText(lab).width+26});
+  requestAnimationFrame(drawPlot)}
+$('#serSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PL.on=b.dataset.v=='plot';$('#serSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#serialOut').hidden=PL.on;$('#serialForm').hidden=PL.on;$('#plot').hidden=!PL.on;if(PL.on)requestAnimationFrame(drawPlot)});
+
+/* ---------- start ---------- */
+if(customElements.get('wokwi-arduino-uno'))start();
+else{const t=setTimeout(start,4000);customElements.whenDefined('wokwi-arduino-uno').then(()=>{clearTimeout(t);start()})}
+/* ---------- pixel cat that wanders along the screen edges (VS Code Pets style) ---------- */
+(()=>{
+  const PAL={o:'#4A2E1A',f:'#F4B266',l:'#FFE3B8',p:'#FF8FA3',e:'#1C1C1E'};
+  const HEAD=['....................','...........o.....o..','..........ofo...ofo.','..........offfffffo.'];
+  const face=(e,t)=>[('..........of'+e+'fff'+e+'fo.'),(t?'..o.......':'..........')+'offfpfffo.',(t?'.ofo......':'..oo......')+'ofllllllo.'];
+  const BODY=['.of..oooooffffffo...','..ooffffffffffffo...','...offffffffffffo...','...offlllllllfffo...','....offfffffffffo...'];
+  const LA=['....of.of..of.of....','....oo.oo..oo.oo....'],LB=['.....of.of.of.of....','.....oo.oo.oo.oo....'],LS=['....oooo...oooo.....','....................'];
+  const fr=(e,t,legs)=>[...HEAD,...face(e,t),...BODY,...legs];
+  const FR={w1:fr('e',1,LA),w2:fr('e',1,LB),sit:fr('e',0,LS),sit2:fr('e',1,LS),sleep:fr('o',0,LS)};
+  const S3=3,cv=document.createElement('canvas');cv.width=20;cv.height=14;cv.className='pet';cv.setAttribute('aria-label','Kedi');cv.title='Miyav! (tıkla)';
+  const g=cv.getContext('2d');const draw=k=>{g.clearRect(0,0,20,14);FR[k].forEach((r,y)=>[...r].forEach((c,x)=>{if(PAL[c]){g.fillStyle=PAL[c];g.fillRect(x,y,1,1)}}))};
+  const bub=document.createElement('div');bub.className='petbub';bub.hidden=true;
+  document.body.append(cv,bub);
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const W0=20*S3,H0=14*S3;let s=60,dir=1,state='walk',until=0,last=performance.now(),frameT=0,jump=0;
+  const dims=()=>{const W=innerWidth-W0,H=innerHeight-H0,Hv=innerHeight-W0,Wh=innerWidth-W0;return{W,H,Hv,L:2*W+2*Hv}};
+  function pose(){const {W,H,Hv,L}=dims();s=((s%L)+L)%L;const k=(W0-H0)/2;
+    if(s<W)return{x:s,y:H,r:0};if(s<W+Hv)return{x:W+k,y:Hv-(s-W)+k-0,r:-90};if(s<2*W+Hv)return{x:W-(s-W-Hv),y:0,r:180};return{x:-k,y:(s-2*W-Hv)+k,r:90}}
+  function seg(){const {W,Hv}=dims();return s<W?0:s<W+Hv?1:s<2*W+Hv?2:3}
+  const say=(t,ms=1600)=>{bub.textContent=t;bub.hidden=false;clearTimeout(say.t);say.t=setTimeout(()=>bub.hidden=true,ms)};
+  cv.addEventListener('click',()=>{if(state=='sleep')say('…mrr?');else say(['Miyav!','Mrrrow ♥','Prrr…','Miyav miyav!'][Math.random()*4|0]);state='sit';until=performance.now()+1800;jump=1});
+  function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;
+    if(reduce){state='sit'}
+    else if(state=='walk'){const before=seg();s+=dir*42*dt;if(seg()!==before&&Math.random()<.35){state='sleep';until=t+5000+Math.random()*4000;say('z z z',3000)}
+      else if(Math.random()<dt*.12){state=Math.random()<.5?'sit':'turn';until=t+1500+Math.random()*2500}}
+    else if(t>until){if(state=='turn')dir*=-1;state='walk'}
+    frameT+=dt;const k=state=='walk'?(Math.floor(frameT*6)%2?'w1':'w2'):state=='sleep'?'sleep':(Math.floor(frameT*2)%2?'sit':'sit2');draw(k);
+    jump=Math.max(0,jump-dt*3);const p=pose(),jy=-Math.sin(jump*Math.PI)*14;
+    cv.style.transform=`translate(${p.x}px,${p.y}px) rotate(${p.r}deg) translateY(${jy}px) scaleX(${dir})`;
+    bub.style.transform=`translate(${Math.min(innerWidth-110,Math.max(4,p.x+(p.r==-90?-70:p.r==90?60:10)))}px,${Math.min(innerHeight-40,Math.max(4,p.y+(p.r==180?56:-30)))}px)`;
+    requestAnimationFrame(tick)}
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
